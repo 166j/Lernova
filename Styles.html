@@ -2081,7 +2081,10 @@
 
   .teacher-form {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(180px, 0.7fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name button"
+      "level button";
     gap: 12px;
     margin-bottom: 14px;
     align-items: end;
@@ -2091,6 +2094,14 @@
     display: grid;
     gap: 8px;
     min-width: 0;
+  }
+
+  .teacher-form .teacher-field:first-child {
+    grid-area: name;
+  }
+
+  .teacher-form .teacher-field-compact {
+    grid-area: level;
   }
 
   .teacher-field span {
@@ -2105,6 +2116,11 @@
 
   .teacher-field-compact {
     max-width: 240px;
+  }
+
+  .teacher-form .primary-button {
+    grid-area: button;
+    align-self: end;
   }
 
   .teacher-input {
