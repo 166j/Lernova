@@ -1,4 +1,25 @@
 <script>
+  (function syncFaviconWithBrand() {
+    function applyBrandFavicon() {
+      const brandImage = document.getElementById('brandImage');
+      const favicon = document.querySelector('link[rel="icon"]');
+      if (!brandImage || !favicon) {
+        return;
+      }
+
+      const src = brandImage.getAttribute('src');
+      if (src) {
+        favicon.setAttribute('href', src);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', applyBrandFavicon, { once: true });
+    } else {
+      applyBrandFavicon();
+    }
+  })();
+
   const APP_STATE = {
     activeView: 'homeView',
     classLevel: '5',
