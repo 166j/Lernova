@@ -196,8 +196,14 @@
           <h3>Neue Klasse erstellen</h3>
           <p>Vergib einen Namen und optional eine Klassenstufe. Danach erzeugt Lernova sofort einen Klassen-Code.</p>
           <div class="teacher-form">
-            <input type="text" class="task-input" id="teacherClassNameInput" placeholder="z. B. 7b Mathematik">
-            <input type="text" class="task-input" id="teacherClassLevelInput" placeholder="z. B. Klasse 7">
+            <label class="teacher-field">
+              <span>Klassenname</span>
+              <input type="text" class="task-input teacher-input" id="teacherClassNameInput" placeholder="z. B. 7b Mathematik">
+            </label>
+            <label class="teacher-field teacher-field-compact">
+              <span>Klassenstufe</span>
+              <input type="text" class="task-input teacher-input" id="teacherClassLevelInput" placeholder="z. B. Klasse 7">
+            </label>
             <button type="button" class="primary-button" id="createClassButton" onclick="createTeacherClassroom()">Klasse erstellen</button>
           </div>
           <div class="teacher-status" id="teacherStatus">Nur Nutzer im Lehrermodus sehen hier Klassen-Codes und Aktivitäten.</div>
