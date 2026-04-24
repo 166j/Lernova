@@ -1,0 +1,2619 @@
+<script>
+  const APP_STATE = {
+    activeView: 'homeView',
+    classLevel: '5',
+    subject: 'mathe',
+    topic: 'zahlen',
+    subtopic: '',
+    tasks: [],
+    taskResults: [],
+    testTasks: [],
+    loading: false,
+    testLoading: false,
+    helpLoading: false,
+    helpTaskIndex: null,
+    openDropdown: '',
+    auth: {
+      token: '',
+      user: null,
+      ready: false,
+      googleClientId: '',
+      googleTokenClient: null
+    },
+    progress: {
+      profile: null
+    },
+    teacher: {
+      classes: [],
+      activities: [],
+      loading: false,
+      selectedClassId: '',
+      selectedStudentKey: ''
+    },
+    test: {
+      submitted: false,
+      result: null
+    },
+    settings: {
+      taskCount: 5,
+      enterChecksTask: true,
+      enterSendsChat: true,
+      themeMode: 'system'
+    }
+  };
+
+  const SUBJECT_ORDER = ['englisch', 'mathe', 'deutsch', 'textilkunde', 'biologie', 'geographie', 'politik', 'informatik', 'technik', 'kunst', 'musik', 'sport', 'religion_ethik', 'geschichte', 'physik', 'chemie'];
+  const SUBJECT_DROPDOWN_CLASSES = {
+    englisch: 'subject-englisch',
+    mathe: 'subject-mathe',
+    deutsch: 'subject-deutsch',
+    textilkunde: 'subject-textilkunde',
+    biologie: 'subject-biologie',
+    geographie: 'subject-geographie',
+    politik: 'subject-politik',
+    informatik: 'subject-informatik',
+    technik: 'subject-technik',
+    kunst: 'subject-kunst',
+    musik: 'subject-musik',
+    sport: 'subject-sport',
+    religion_ethik: 'subject-religion_ethik',
+    geschichte: 'subject-geschichte',
+    physik: 'subject-physik',
+    chemie: 'subject-chemie'
+  };
+
+  const SUBJECT_CONFIG = {
+    mathe: {
+      label: 'Mathe',
+      description: 'Mathematik orientiert sich an den Inhaltsbereichen Zahlen, Größen, Geometrie, Funktionen, Daten und Wahrscheinlichkeit.',
+      topicsByClass: {
+        5: {
+          zahlen: { label: 'Zahlen und Grundrechnen', tip: 'Sichere Rechenverfahren mit natürlichen Zahlen, Größen und Sachaufgaben stehen im Mittelpunkt.' },
+          geometrie: { label: 'Geometrische Figuren', tip: 'Unterscheide Grundformen, Winkel und einfache Flächen sicher.' },
+          daten: { label: 'Daten und Diagramme', tip: 'Lies Tabellen und Diagramme sorgfältig und beschreibe sie passend.' }
+        },
+        6: {
+          zahlen: { label: 'Zahlen und Größen', tip: 'Natürliche Zahlen, Dezimalzahlen und alltagsnahe Größen werden verbunden.' },
+          geometrie: { label: 'Geometrische Figuren', tip: 'Umfang, Flächen und Grundkonstruktionen werden sicherer.' },
+          daten: { label: 'Daten und Diagramme', tip: 'Beschreibe Daten zunehmend genauer und vergleiche Darstellungen.' }
+        },
+        7: {
+          brueche_zuordnungen: { label: 'Brüche und Zuordnungen', tip: 'Brüche, Prozente und proportionale Zusammenhänge gehören hier zusammen.' },
+          terme_gleichungen: { label: 'Terme und Gleichungen', tip: 'Forme Terme um und löse einfache Gleichungen schrittweise.' },
+          geometrie_flaechen: { label: 'Geometrie und Flächen', tip: 'Nutze Winkelwissen und Flächenformeln passend zur Figur.' }
+        },
+        8: {
+          brueche_zuordnungen: { label: 'Prozent, Zuordnungen und Verhältnis', tip: 'Verbinde Prozente, Dreisatz und proportionale Zusammenhänge.' },
+          terme_gleichungen: { label: 'Terme und lineare Gleichungen', tip: 'Arbeite sicher mit Variablen, Umformungen und einfachen Modellen.' },
+          geometrie_flaechen: { label: 'Geometrie und Flächen', tip: 'Flächeninhalte und Winkelbeziehungen werden systematischer genutzt.' }
+        },
+        9: {
+          funktionen: { label: 'Funktionen und Graphen', tip: 'Ordne Term, Wertetabelle und Graph sinnvoll einander zu.' },
+          prozent_zins: { label: 'Prozent- und Zinsrechnung', tip: 'Prüfe genau, was Grundwert, Prozentwert und Prozentsatz sind.' },
+          koerper_wahrscheinlichkeit: { label: 'Körper, Statistik und Wahrscheinlichkeit', tip: 'Nutze Formeln für Volumen und werte Daten oder Zufallssituationen aus.' }
+        },
+        10: {
+          funktionen: { label: 'Funktionen und Graphen', tip: 'Lineare und quadratische Zusammenhänge sollen sicher erkannt und beschrieben werden.' },
+          prozent_zins: { label: 'Prozent- und Zinsrechnung', tip: 'Berechne Zinsen, Rabatte und Wachstumsprozesse mit passenden Modellen.' },
+          koerper_wahrscheinlichkeit: { label: 'Körper, Statistik und Wahrscheinlichkeit', tip: 'Verbinde Raumvorstellung, Datenanalyse und Wahrscheinlichkeitsdenken.' }
+        }
+      }
+    },
+    englisch: {
+      label: 'Englisch',
+      description: 'Englisch orientiert sich an kommunikativen Kompetenzen, Wortschatzarbeit, Grammatik und Textarbeit über die Klassenstufen hinweg.',
+      topicsByClass: {
+        5: {
+          alltag: { label: 'Alltag und Kommunikation', tip: 'Sich vorstellen, nach Dingen fragen und über den Schulalltag sprechen sind zentrale Grundlagen.' },
+          grammar_basic: { label: 'Grammatik-Grundlagen', tip: 'Achte auf einfache Satzmuster, Begleiter und die Gegenwart.' },
+          reading: { label: 'Lesen und Wortschatz', tip: 'Arbeite mit kurzen Alltagstexten und einfachem Basiswortschatz.' }
+        },
+        6: {
+          alltag: { label: 'Alltag und Kommunikation', tip: 'Über Familie, Schule, Hobbys und Wege sprechen wird ausgebaut.' },
+          grammar_basic: { label: 'Grammatik-Grundlagen', tip: 'Präsensformen, Satzstellung und einfache Vergleiche werden sicherer.' },
+          reading: { label: 'Lesen und Wortschatz', tip: 'Entnimm Informationen aus etwas längeren Alltagstexten.' }
+        },
+        7: {
+          mediation: { label: 'Sprachmittlung und Alltag', tip: 'Vermittle einfache Informationen sinngemäß zwischen Deutsch und Englisch.' },
+          tenses: { label: 'Zeiten und Grammatik', tip: 'Simple past, present perfect und wichtige Satzmuster spielen eine größere Rolle.' },
+          text_media: { label: 'Texte und Medien', tip: 'Arbeite mit Sachtexten, Dialogen und Jugendthemen.' }
+        },
+        8: {
+          mediation: { label: 'Sprachmittlung und Kommunikation', tip: 'Übertrage Informationen adressatengerecht und verständlich.' },
+          tenses: { label: 'Zeiten und Grammatik', tip: 'Nutze Zeiten, Vergleiche und passende Verknüpfungen sicherer.' },
+          text_media: { label: 'Texte, Themen und Medien', tip: 'Bearbeite altersnahe Themen aus englischsprachigen Lebenswelten.' }
+        },
+        9: {
+          literature: { label: 'Textarbeit und Literatur', tip: 'Verstehe Inhalte, Figuren und Aussagen zunehmend genauer.' },
+          language_in_use: { label: 'Grammatik im Gebrauch', tip: 'Grammatik soll passend in sinnvollen Kontexten eingesetzt werden.' },
+          writing: { label: 'Schreiben und Sprachmittlung', tip: 'Formuliere zusammenhängend, begründe und fasse Informationen zusammen.' }
+        },
+        10: {
+          literature: { label: 'Textarbeit und Literatur', tip: 'Arbeite genauer mit Aussagen, Perspektiven und sprachlicher Wirkung.' },
+          language_in_use: { label: 'Grammatik im Gebrauch', tip: 'Sichere Formen in komplexeren Kontexten anwenden ist hier zentral.' },
+          writing: { label: 'Schreiben und Sprachmittlung', tip: 'Schreibe adressatengerecht und fasse Informationen präzise zusammen.' }
+        }
+      }
+    },
+    chemie: {
+      label: 'Chemie',
+      description: 'Stoffe, Trennverfahren und Atommodelle verständlich und schrittweise üben.',
+      topics: {
+        stoffe: { label: 'Stoffe', tip: 'Achte auf typische Stoffeigenschaften wie Farbe, Leitfähigkeit oder Aggregatzustand.' },
+        trennverfahren: { label: 'Trennverfahren', tip: 'Überlege, welche Eigenschaft von Stoffen beim Trennen ausgenutzt wird.' },
+        atommodell: { label: 'Atommodell', tip: 'Merke dir Aufbau, Ladungen und Aufgaben der kleinsten Teilchen.' }
+      }
+    },
+    geschichte: {
+      label: 'Geschichte',
+      description: 'Geschichte folgt hier den Realschul-Themenfeldern von der Antike bis zur deutschen Zeitgeschichte.',
+      topicsByClass: {
+        5: {
+          aegypten: { label: 'Ägypten und frühe Hochkulturen', tip: 'Nil, Staat, Versorgung und Herrschaft gehören hier zusammen.' },
+          rom: { label: 'Rom und Antike', tip: 'Achte auf Stadtentwicklung, Republik, Kaiserzeit und Alltag.' },
+          mittelalter: { label: 'Herrschaft und Ständegesellschaft', tip: 'Kaiser, Papst, Adel und Bauern prägen das mittelalterliche Leben.' }
+        },
+        6: {
+          aegypten: { label: 'Ägypten und frühe Hochkulturen', tip: 'Nil, Staat, Versorgung und Herrschaft gehören hier zusammen.' },
+          rom: { label: 'Rom und Antike', tip: 'Achte auf Stadtentwicklung, Republik, Kaiserzeit und Alltag.' },
+          mittelalter: { label: 'Herrschaft und Ständegesellschaft', tip: 'Kaiser, Papst, Adel und Bauern prägen das mittelalterliche Leben.' }
+        },
+        7: {
+          stadt_buerger: { label: 'Stadt und Bürger im Mittelalter', tip: 'Stadtleben, Handel und neue Freiheiten verändern die Gesellschaft.' },
+          religionen_handel: { label: 'Religionen und Handel', tip: 'Koexistenz, Konflikte und Fernhandel prägen viele Entwicklungen.' },
+          epochenwende: { label: 'Renaissance und Reformation', tip: 'Neue Weltbilder und Machtverschiebungen verändern Europa.' }
+        },
+        8: {
+          stadt_buerger: { label: 'Stadt und Bürger im Mittelalter', tip: 'Stadtleben, Handel und neue Freiheiten verändern die Gesellschaft.' },
+          religionen_handel: { label: 'Religionen und Handel', tip: 'Koexistenz, Konflikte und Fernhandel prägen viele Entwicklungen.' },
+          epochenwende: { label: 'Renaissance und Reformation', tip: 'Neue Weltbilder und Machtverschiebungen verändern Europa.' }
+        },
+        9: {
+          weimar: { label: 'Weimarer Republik', tip: 'Zwischen Demokratie, Krisen und politischen Konflikten wird Geschichte greifbar.' },
+          nationalsozialismus: { label: 'Nationalsozialismus', tip: 'Machtergreifung, Diktatur und Folgen müssen historisch eingeordnet werden.' },
+          kalter_krieg: { label: 'Kalter Krieg und Deutschland', tip: 'Teilung, Systemkonflikt und Alltag in Ost und West sind zentral.' }
+        },
+        10: {
+          weimar: { label: 'Weimarer Republik', tip: 'Zwischen Demokratie, Krisen und politischen Konflikten wird Geschichte greifbar.' },
+          nationalsozialismus: { label: 'Nationalsozialismus', tip: 'Machtergreifung, Diktatur und Folgen müssen historisch eingeordnet werden.' },
+          kalter_krieg: { label: 'Kalter Krieg und Deutschland', tip: 'Teilung, Systemkonflikt und Alltag in Ost und West sind zentral.' }
+        }
+      }
+    },
+    physik: {
+      label: 'Physik',
+      description: 'Bewegung, Kraft und Strom mit klaren Grundlagen und einfachen Regeln verstehen.',
+      topics: {
+        bewegung: { label: 'Bewegung', tip: 'Achte auf Weg, Zeit und Geschwindigkeit.' },
+        kraft: { label: 'Kraft', tip: 'Merke dir Wirkung, Richtung und Einheit von Kräften.' },
+        strom: { label: 'Strom', tip: 'Ein Stromkreis muss geschlossen sein und braucht Quelle, Leiter und Verbraucher.' }
+      }
+    },
+    biologie: {
+      label: 'Biologie',
+      description: 'Biologie orientiert sich hier an zentralen Themen des NRW-Lehrplans und wechselt passend zur Klassenstufe.',
+      topicsByClass: {
+        5: {
+          lebensraeume: { label: 'Tiere und Pflanzen in Lebensräumen', tip: 'Achte auf Blütenpflanzen, Nahrungsketten und Angepasstheit an den Lebensraum.' },
+          gesundheit: { label: 'Gesundheitsbewusstes Leben', tip: 'Ernährung, Bewegung und der Körper gehören hier eng zusammen.' },
+          sinne: { label: 'Sinne und Wahrnehmung', tip: 'Auge, Ohr und Haut nehmen Reize auf und leiten Informationen weiter.' }
+        },
+        6: {
+          lebensraeume: { label: 'Tiere und Pflanzen in Lebensräumen', tip: 'Achte auf Blütenpflanzen, Nahrungsketten und Angepasstheit an den Lebensraum.' },
+          gesundheit: { label: 'Gesundheitsbewusstes Leben', tip: 'Ernährung, Bewegung und der Körper gehören hier eng zusammen.' },
+          sinne: { label: 'Sinne und Wahrnehmung', tip: 'Auge, Ohr und Haut nehmen Reize auf und leiten Informationen weiter.' }
+        },
+        7: {
+          oekosysteme: { label: 'Ökosysteme und ihre Veränderungen', tip: 'Produzenten, Konsumenten und Destruenten wirken in Stoffkreisläufen zusammen.' },
+          medizin: { label: 'Biologische Forschung und Medizin', tip: 'Immunsystem, Krankheitserreger, Impfungen und Diabetes sind zentrale Themen.' },
+          sexualerziehung: { label: 'Sexualerziehung', tip: 'Pubertät, Entwicklung und verantwortungsbewusster Umgang mit dem eigenen Körper stehen im Fokus.' }
+        },
+        8: {
+          oekosysteme: { label: 'Ökosysteme und ihre Veränderungen', tip: 'Produzenten, Konsumenten und Destruenten wirken in Stoffkreisläufen zusammen.' },
+          medizin: { label: 'Biologische Forschung und Medizin', tip: 'Immunsystem, Krankheitserreger, Impfungen und Diabetes sind zentrale Themen.' },
+          sexualerziehung: { label: 'Sexualerziehung', tip: 'Pubertät, Entwicklung und verantwortungsbewusster Umgang mit dem eigenen Körper stehen im Fokus.' }
+        },
+        9: {
+          genetik: { label: 'Gene und Vererbung', tip: 'Gene, DNA, Chromosomen und Vererbung helfen biologische Zusammenhänge zu erklären.' },
+          evolution: { label: 'Evolution – Vielfalt und Veränderung', tip: 'Fossilien, Mutation, Selektion und Stammesentwicklung gehören zusammen.' },
+          lebensphasen: { label: 'Stationen eines Lebens', tip: 'Entwicklung, Altern und medizinische Entscheidungen werden biologisch betrachtet.' }
+        },
+        10: {
+          genetik: { label: 'Gene und Vererbung', tip: 'Gene, DNA, Chromosomen und Vererbung helfen biologische Zusammenhänge zu erklären.' },
+          evolution: { label: 'Evolution – Vielfalt und Veränderung', tip: 'Fossilien, Mutation, Selektion und Stammesentwicklung gehören zusammen.' },
+          lebensphasen: { label: 'Stationen eines Lebens', tip: 'Entwicklung, Altern und medizinische Entscheidungen werden biologisch betrachtet.' }
+        }
+      }
+    },
+    geographie: {
+      label: 'Erdkunde / Geographie',
+      description: 'Erdkunde orientiert sich an Räumen, Nutzungen, Naturgefahren und Stadtentwicklung des NRW-Lehrplans.',
+      topicsByClass: {
+        5: {
+          orientierung: { label: 'Karten und Orientierung', tip: 'Nutze Karten, Maßstab, Legende und Himmelsrichtungen sicher.' },
+          tourismus: { label: 'Tourismus und Freizeit', tip: 'Tourismus verändert Orte, Landschaften und Nutzungen.' },
+          landwirtschaft: { label: 'Landwirtschaft bei uns', tip: 'Überlege, wie Standort, Klima und Nutzung zusammenhängen.' }
+        },
+        6: {
+          orientierung: { label: 'Karten und Orientierung', tip: 'Nutze Karten, Maßstab, Legende und Himmelsrichtungen sicher.' },
+          tourismus: { label: 'Tourismus und Freizeit', tip: 'Tourismus verändert Orte, Landschaften und Nutzungen.' },
+          landwirtschaft: { label: 'Landwirtschaft bei uns', tip: 'Überlege, wie Standort, Klima und Nutzung zusammenhängen.' }
+        },
+        7: {
+          regenwald: { label: 'Tropischer Regenwald', tip: 'Achte auf Klima, Nutzung, Gefährdung und Schutz.' },
+          naturgefahren: { label: 'Naturgefahren', tip: 'Naturkräfte beeinflussen das Leben je nach Raum sehr unterschiedlich.' },
+          klima: { label: 'Klima und Klimawandel', tip: 'Unterscheide Wetter, Klima und globale Veränderungen klar.' }
+        },
+        8: {
+          regenwald: { label: 'Tropischer Regenwald', tip: 'Achte auf Klima, Nutzung, Gefährdung und Schutz.' },
+          naturgefahren: { label: 'Naturgefahren', tip: 'Naturkräfte beeinflussen das Leben je nach Raum sehr unterschiedlich.' },
+          klima: { label: 'Klima und Klimawandel', tip: 'Unterscheide Wetter, Klima und globale Veränderungen klar.' }
+        },
+        9: {
+          stadtentwicklung: { label: 'Stadtentwicklung', tip: 'Städte verändern sich durch Wohnen, Verkehr, Wirtschaft und Planung.' },
+          globalisierung: { label: 'Globalisierung und Räume', tip: 'Verflechtungen zwischen Regionen haben Chancen und Probleme.' },
+          bevoelkerung: { label: 'Bevölkerung und Entwicklung', tip: 'Wachstum und Verteilung der Bevölkerung prägen Räume weltweit.' }
+        },
+        10: {
+          stadtentwicklung: { label: 'Stadtentwicklung', tip: 'Städte verändern sich durch Wohnen, Verkehr, Wirtschaft und Planung.' },
+          globalisierung: { label: 'Globalisierung und Räume', tip: 'Verflechtungen zwischen Regionen haben Chancen und Probleme.' },
+          bevoelkerung: { label: 'Bevölkerung und Entwicklung', tip: 'Wachstum und Verteilung der Bevölkerung prägen Räume weltweit.' }
+        }
+      }
+    },
+    politik: {
+      label: 'Sozialkunde / Politik',
+      description: 'Politik orientiert sich hier an Demokratiebildung, digitaler Lebenswelt, Verbraucherfragen und Europa.',
+      topicsByClass: {
+        5: {
+          digitales_leben: { label: 'Leben in der digitalisierten Welt', tip: 'Überlege, wie digitale Medien Alltag und Teilhabe beeinflussen.' },
+          zusammenleben: { label: 'Regeln und Zusammenleben', tip: 'Regeln helfen, Konflikte zu lösen und Gemeinschaft zu gestalten.' },
+          verbraucher: { label: 'Werbung und Konsum', tip: 'Achte auf Einflüsse von Werbung und bewusste Entscheidungen.' }
+        },
+        6: {
+          digitales_leben: { label: 'Leben in der digitalisierten Welt', tip: 'Überlege, wie digitale Medien Alltag und Teilhabe beeinflussen.' },
+          zusammenleben: { label: 'Regeln und Zusammenleben', tip: 'Regeln helfen, Konflikte zu lösen und Gemeinschaft zu gestalten.' },
+          verbraucher: { label: 'Werbung und Konsum', tip: 'Achte auf Einflüsse von Werbung und bewusste Entscheidungen.' }
+        },
+        7: {
+          demokratie: { label: 'Demokratie und Mitwirkung', tip: 'Institutionen, Wahlen und Beteiligungsmöglichkeiten gehören hier zusammen.' },
+          medien: { label: 'Medien und Identität', tip: 'Digitale Medien schaffen Chancen, aber auch Risiken für Jugendliche.' },
+          nachhaltigkeit: { label: 'Konsum und Nachhaltigkeit', tip: 'Konsum hat Folgen für Umwelt, Wirtschaft und Gesellschaft.' }
+        },
+        8: {
+          demokratie: { label: 'Demokratie und Mitwirkung', tip: 'Institutionen, Wahlen und Beteiligungsmöglichkeiten gehören hier zusammen.' },
+          medien: { label: 'Medien und Identität', tip: 'Digitale Medien schaffen Chancen, aber auch Risiken für Jugendliche.' },
+          nachhaltigkeit: { label: 'Konsum und Nachhaltigkeit', tip: 'Konsum hat Folgen für Umwelt, Wirtschaft und Gesellschaft.' }
+        },
+        9: {
+          europa: { label: 'Europa und Politik', tip: 'Europa beeinflusst Alltag, Rechte und politische Entscheidungen.' },
+          wirtschaft: { label: 'Wirtschaft und Markt', tip: 'Markt, Preise und Entscheidungen haben soziale Folgen.' },
+          arbeitswelt: { label: 'Arbeitswelt und Zukunft', tip: 'Beruf, Wandel und Gerechtigkeit spielen hier zusammen.' }
+        },
+        10: {
+          europa: { label: 'Europa und Politik', tip: 'Europa beeinflusst Alltag, Rechte und politische Entscheidungen.' },
+          wirtschaft: { label: 'Wirtschaft und Markt', tip: 'Markt, Preise und Entscheidungen haben soziale Folgen.' },
+          arbeitswelt: { label: 'Arbeitswelt und Zukunft', tip: 'Beruf, Wandel und Gerechtigkeit spielen hier zusammen.' }
+        }
+      }
+    },
+    informatik: {
+      label: 'Informatik',
+      description: 'Informatik orientiert sich an Algorithmik, Codierung, Daten, digitalen Systemen und verantwortlichem Handeln.',
+      topicsByClass: {
+        5: {
+          algorithmen: { label: 'Algorithmen und Anweisungen', tip: 'Klare Schrittfolgen sind die Grundlage für problemlösendes Denken.' },
+          codierung: { label: 'Codierung und Verschlüsselung', tip: 'Informationen können in Zeichen, Codes und einfachen Verfahren dargestellt werden.' },
+          automaten: { label: 'Automaten und Systeme', tip: 'Digitale Systeme folgen Zuständen, Regeln und Reaktionen.' }
+        },
+        6: {
+          algorithmen: { label: 'Algorithmen und Anweisungen', tip: 'Klare Schrittfolgen sind die Grundlage für problemlösendes Denken.' },
+          codierung: { label: 'Codierung und Verschlüsselung', tip: 'Informationen können in Zeichen, Codes und einfachen Verfahren dargestellt werden.' },
+          automaten: { label: 'Automaten und Systeme', tip: 'Digitale Systeme folgen Zuständen, Regeln und Reaktionen.' }
+        },
+        7: {
+          programmierung: { label: 'Programmierung und Logik', tip: 'Bedingungen, Schleifen und Variablen helfen beim Modellieren.' },
+          daten_netzwerke: { label: 'Daten und Netzwerke', tip: 'Daten werden gespeichert, übertragen und geschützt.' },
+          sicherheit: { label: 'Sicherheit und Verantwortung', tip: 'Datenschutz, Passwörter und verantwortliche Nutzung bleiben zentral.' }
+        },
+        8: {
+          programmierung: { label: 'Programmierung und Logik', tip: 'Bedingungen, Schleifen und Variablen helfen beim Modellieren.' },
+          daten_netzwerke: { label: 'Daten und Netzwerke', tip: 'Daten werden gespeichert, übertragen und geschützt.' },
+          sicherheit: { label: 'Sicherheit und Verantwortung', tip: 'Datenschutz, Passwörter und verantwortliche Nutzung bleiben zentral.' }
+        },
+        9: {
+          datenbanken_ki: { label: 'Daten, Modelle und KI', tip: 'Daten werden geordnet, ausgewertet und kritisch betrachtet.' },
+          logische_schaltungen: { label: 'Logische Schaltungen', tip: 'Logische Verknüpfungen sind eine Grundlage digitaler Technik.' },
+          projektentwicklung: { label: 'Digitale Projekte entwickeln', tip: 'Probleme werden analysiert, modelliert und als Lösung umgesetzt.' }
+        },
+        10: {
+          datenbanken_ki: { label: 'Daten, Modelle und KI', tip: 'Daten werden geordnet, ausgewertet und kritisch betrachtet.' },
+          logische_schaltungen: { label: 'Logische Schaltungen', tip: 'Logische Verknüpfungen sind eine Grundlage digitaler Technik.' },
+          projektentwicklung: { label: 'Digitale Projekte entwickeln', tip: 'Probleme werden analysiert, modelliert und als Lösung umgesetzt.' }
+        }
+      }
+    },
+    technik: {
+      label: 'Technik / Werken',
+      description: 'Werkstoffe, Konstruktionen und Werkzeuge mit praktischen Grundlagen verstehen.',
+      topics: {
+        werkstoffe: { label: 'Werkstoffe', tip: 'Verschiedene Materialien haben unterschiedliche Eigenschaften und Einsatzbereiche.' },
+        werkzeuge: { label: 'Werkzeuge und Sicherheit', tip: 'Sicheres Arbeiten beginnt mit dem richtigen Werkzeug und sauberem Umgang.' },
+        konstruktion: { label: 'Konstruktion', tip: 'Plane zuerst die Funktion, dann Form, Material und Verbindung.' }
+      }
+    },
+    kunst: {
+      label: 'Kunst',
+      description: 'Farben, Perspektive und Bildbetrachtung kreativ und verständlich entdecken.',
+      topics: {
+        farbenlehre: { label: 'Farbenlehre', tip: 'Primär- und Sekundärfarben helfen dir beim Mischen und Ordnen.' },
+        perspektive: { label: 'Perspektive', tip: 'Fluchtpunkte und Horizontlinie erzeugen räumliche Tiefe.' },
+        bildanalyse: { label: 'Bildanalyse', tip: 'Beschreibe erst genau, deute danach Wirkung und Aussage.' }
+      }
+    },
+    musik: {
+      label: 'Musik',
+      description: 'Rhythmus, Noten und Instrumente mit klaren Beispielen trainieren.',
+      topics: {
+        rhythmus: { label: 'Rhythmus', tip: 'Achte auf gleichmäßige Zählzeiten und wiederkehrende Muster.' },
+        noten: { label: 'Notenlehre', tip: 'Notenwert und Tonhöhe geben zusammen wichtige musikalische Informationen.' },
+        instrumente: { label: 'Instrumentenkunde', tip: 'Ordne Instrumente nach ihrer Klangerzeugung und Familie.' }
+      }
+    },
+    sport: {
+      label: 'Sport',
+      description: 'Bewegung, Training und faire Regeln aus dem Sportunterricht sicher wiederholen.',
+      topics: {
+        bewegung: { label: 'Bewegung und Koordination', tip: 'Koordination verbindet Wahrnehmung, Reaktion und genaue Ausführung.' },
+        training: { label: 'Training und Fitness', tip: 'Gutes Training braucht Belastung, Erholung und Regelmäßigkeit.' },
+        regeln: { label: 'Regeln und Fair Play', tip: 'Regeln schaffen Sicherheit, Vergleichbarkeit und Fairness.' }
+      }
+    },
+    religion_ethik: {
+      label: 'Religion / Ethik',
+      description: 'Wähle zwischen katholisch, evangelisch oder Philosophie und lerne zentrale Grundlagen.',
+      topics: {
+        katholisch: { label: 'Katholisch', tip: 'Achte auf Sakramente, Kirche und zentrale Feste im Kirchenjahr.' },
+        evangelisch: { label: 'Evangelisch', tip: 'Wichtige Themen sind Bibel, Glaube, Reformation und Gemeinde.' },
+        philosophie: { label: 'Philosophie / Ethik', tip: 'Frage nach richtigem Handeln, Verantwortung und guten Begründungen.' }
+      }
+    },
+    deutsch: {
+      label: 'Deutsch',
+      description: 'Wähle Thema und Unterthema passend zu deiner Klasse und übe gezielt.',
+      topicsByClass: {
+        5: {
+          schreiben: { label: 'Schreiben', tip: 'Ein guter Text hat Einleitung, Hauptteil und Schluss.' },
+          rechtschreibung: {
+            label: 'Rechtschreibung',
+            tip: 'Achte auf Großschreibung, Laute und typische Fehlerstellen.',
+            subtopics: {
+              gross_klein: { label: 'Groß- und Kleinschreibung', tip: 'Nomen und Satzanfänge schreibst du groß.' },
+              ie_h_doppel: { label: 'Wörter mit ie, h, Doppelkonsonanten', tip: 'Sprich Wörter deutlich und achte auf lange und kurze Vokale.' },
+              s_laute: { label: 's-Laute (s, ss, ß)', tip: 'Nach kurzem Vokal steht oft ss, nach langem oft ß.' },
+              zeichensetzung: { label: 'Zeichensetzung', tip: 'Setze Punkt am Satzende und Kommas bei Aufzählungen.' },
+              abschreiben: { label: 'Richtig abschreiben und Fehler verbessern', tip: 'Vergleiche Wort für Wort und prüfe Großschreibung und Endzeichen.' }
+            }
+          },
+          grammatik: {
+            label: 'Grammatik',
+            tip: 'Achte darauf, was ein Wort im Satz macht und wie Sätze aufgebaut sind.',
+            subtopics: {
+              wortarten: { label: 'Wortarten', tip: 'Nomen benennen Dinge, Verben Tätigkeiten, Adjektive Eigenschaften.' },
+              zeitformen: { label: 'Zeitformen', tip: 'Präsens ist Gegenwart, Präteritum und Perfekt liegen in der Vergangenheit.' },
+              satzglieder: { label: 'Satzglieder', tip: 'Frage nach Wer?, Was tut? und Wen oder Was?.' },
+              satzarten: { label: 'Satzarten', tip: 'Fragen, Aussagen und Aufforderungen erkennst du oft am Satzschlusszeichen.' }
+            }
+          }
+        },
+        6: {
+          schreiben: { label: 'Schreiben', tip: 'Briefe und E-Mails brauchen eine passende Anrede und klare Formulierungen.' },
+          rechtschreibung: {
+            label: 'Rechtschreibung',
+            tip: 'Jetzt werden Regeln genauer: vor allem Nominalisierung und Kommas im Satz.',
+            subtopics: {
+              gross_klein: { label: 'Groß- und Kleinschreibung', tip: 'Nominalisierungen wie beim Lernen werden großgeschrieben.' },
+              ie_h_doppel: { label: 'Dehnung und Schärfung', tip: 'ie und h dehnen, Doppelkonsonanten zeigen oft einen kurzen Vokal.' },
+              s_laute: { label: 's-Laute (s, ss, ß)', tip: 'Prüfe die Vokallänge vor dem s-Laut.' },
+              zeichensetzung: { label: 'Zeichensetzung', tip: 'Kommas trennen Aufzählungen und einfache Nebensätze.' },
+              abschreiben: { label: 'Fehler erkennen und verbessern', tip: 'Suche systematisch nach Rechtschreib- und Zeichensetzungsfehlern.' }
+            }
+          },
+          grammatik: {
+            label: 'Grammatik',
+            tip: 'Neben Wortarten kommen jetzt auch Nebensätze und weitere Zeitformen dazu.',
+            subtopics: {
+              wortarten: { label: 'Wortarten', tip: 'Unterscheide Nomen, Verben, Adjektive, Artikel und Pronomen sicher.' },
+              zeitformen: { label: 'Zeitformen', tip: 'Plusquamperfekt beschreibt etwas, das vor einer anderen Vergangenheit passiert ist.' },
+              satzglieder: { label: 'Satzglieder', tip: 'Akkusativ und Dativ erkennst du über die Frageformen.' },
+              satzarten: { label: 'Hauptsatz und Nebensatz', tip: 'Im Nebensatz steht das Verb oft am Ende.' }
+            }
+          }
+        },
+        7: {
+          schreiben: { label: 'Schreiben', tip: 'Bericht und Vorgangsbeschreibung brauchen klare Reihenfolge und sachliche Sprache.' },
+          rechtschreibung: {
+            label: 'Rechtschreibung',
+            tip: 'Wichtige Schwerpunkte sind das oder dass, Kommaregeln und Wortbausteine.',
+            subtopics: {
+              das_dass: { label: 'das und dass', tip: 'Ersetze dass nie mit welches oder dieses.' },
+              kommaregeln: { label: 'Kommaregeln', tip: 'Vor Nebensätzen steht in der Regel ein Komma.' },
+              wortbausteine: { label: 'Wortbausteine', tip: 'Achte auf Vorsilben, Stamm und typische Ableitungen.' }
+            }
+          },
+          grammatik: {
+            label: 'Grammatik',
+            tip: 'Jetzt geht es stärker um Satzbau, Pronomen und Aktiv oder Passiv.',
+            subtopics: {
+              satzbau: { label: 'Satzbau', tip: 'Ein Satzgefüge besteht aus Hauptsatz und Nebensatz.' },
+              pronomen: { label: 'Pronomen', tip: 'Pronomen können Nomen ersetzen oder begleiten.' },
+              aktiv_passiv: { label: 'Aktiv und Passiv', tip: 'Im Passiv steht die Handlung im Mittelpunkt.' }
+            }
+          }
+        },
+        8: {
+          schreiben: { label: 'Schreiben', tip: 'Argumentiere klar, begründe deine Meinung und bleibe sachlich.' },
+          rechtschreibung: {
+            label: 'Rechtschreibung',
+            tip: 'Sichere Regeln wie das oder dass und Kommas müssen jetzt zuverlässig sitzen.',
+            subtopics: {
+              das_dass: { label: 'das und dass', tip: 'Frage dich, ob du das auch durch dieses ersetzen könntest.' },
+              kommaregeln: { label: 'Kommaregeln', tip: 'Nebensätze und Aufzählungen brauchen klare Zeichensetzung.' },
+              wortbausteine: { label: 'Wortbausteine', tip: 'Wortteile helfen dir, schwierige Schreibweisen herzuleiten.' }
+            }
+          },
+          grammatik: {
+            label: 'Grammatik',
+            tip: 'Analysiere Satzbau, Pronomen und die Umwandlung von Aktiv ins Passiv.',
+            subtopics: {
+              satzbau: { label: 'Satzbau', tip: 'Achte auf Verbstellung und die Verbindung mehrerer Satzteile.' },
+              pronomen: { label: 'Pronomen', tip: 'Bestimme, ob ein Pronomen stellvertretend oder begleitend verwendet wird.' },
+              aktiv_passiv: { label: 'Aktiv und Passiv', tip: 'Prüfe, wer handelt und worauf die Handlung gerichtet ist.' }
+            }
+          }
+        },
+        9: {
+          schreiben: { label: 'Schreiben', tip: 'Erörterungen und Inhaltsangaben brauchen sachliche Sprache und klare Struktur.' },
+          rechtschreibung: {
+            label: 'Rechtschreibung',
+            tip: 'Schwierige Wörter, Nominalisierungen und präzise Kommasetzung werden wichtiger.',
+            subtopics: {
+              fremdwoerter: { label: 'Fremdwörter', tip: 'Lerne typische Buchstabenfolgen wie th, ph oder y bewusst.' },
+              nominalisierung: { label: 'Nominalisierung', tip: 'Verbalisierte Tätigkeiten werden als Nomen großgeschrieben.' },
+              kommata: { label: 'Kommata', tip: 'Vor und in Nebensatzkonstruktionen musst du Satzgrenzen sicher erkennen.' }
+            }
+          },
+          grammatik: {
+            label: 'Grammatik',
+            tip: 'Konjunktiv, Satzbau und Aktiv oder Passiv gehören jetzt sicher dazu.',
+            subtopics: {
+              konjunktiv: { label: 'Konjunktiv', tip: 'Konjunktiv I steht oft in indirekter Rede, Konjunktiv II bei Möglichkeiten.' },
+              satzbau: { label: 'Satzbau', tip: 'Analysiere Haupt- und Nebensätze sowie die Stellung wichtiger Satzglieder.' },
+              aktiv_passiv: { label: 'Aktiv und Passiv', tip: 'Wandle Sätze bewusst zwischen beiden Formen um.' }
+            }
+          }
+        },
+        10: {
+          schreiben: { label: 'Schreiben', tip: 'Formelle Texte, Erörterung und Interpretation brauchen Klarheit und Textbezug.' },
+          rechtschreibung: {
+            label: 'Rechtschreibung',
+            tip: 'Achte auf anspruchsvollere Wörter, Nominalisierungen und sichere Satzzeichen.',
+            subtopics: {
+              fremdwoerter: { label: 'Fremdwörter', tip: 'Schwierige Fach- und Fremdwörter sollten orthografisch sicher sitzen.' },
+              nominalisierung: { label: 'Nominalisierung', tip: 'Nominalisierte Verben und Adjektive erkennst du oft an Artikeln oder Präpositionen.' },
+              kommata: { label: 'Kommata', tip: 'Kommas helfen, komplexe Sätze lesbar und korrekt zu strukturieren.' }
+            }
+          },
+          grammatik: {
+            label: 'Grammatik',
+            tip: 'Nutze Konjunktiv, Satzanalysen und Aktiv oder Passiv präzise.',
+            subtopics: {
+              konjunktiv: { label: 'Konjunktiv', tip: 'Setze Konjunktiv gezielt für Distanz, Bericht oder Irrealität ein.' },
+              satzbau: { label: 'Satzbau', tip: 'Untersuche Satzgefüge und Funktionen von Dativ- und Akkusativobjekten.' },
+              aktiv_passiv: { label: 'Aktiv und Passiv', tip: 'Überlege, welche Wirkung die Form auf den Text hat.' }
+            }
+          }
+        }
+      }
+    },
+    textilkunde: {
+      label: 'Textilkunde / Textilgestaltung',
+      description: 'Textile Materialien, Gestaltung, Nachhaltigkeit und Konsumentscheidungen praxisnah entdecken.',
+      topicsByClass: {
+        5: {
+          materialien: { label: 'Materialien und Werkzeuge', tip: 'Unterscheide Fasern, einfache Werkzeuge und sichere Arbeitsschritte.' },
+          muster_farben: { label: 'Farben und Muster', tip: 'Beschreibe textile Gestaltungen mit passenden Fachbegriffen.' },
+          kleidung_alltag: { label: 'Kleidung im Alltag', tip: 'Überlege, welche Funktionen Kleidung in verschiedenen Situationen erfüllt.' }
+        },
+        6: {
+          materialien: { label: 'Materialien und Werkzeuge', tip: 'Vergleiche Eigenschaften von Stoffen und den Einsatz einfacher Werkzeuge.' },
+          muster_farben: { label: 'Farben und Muster', tip: 'Nutze Begriffe für Farbe, Kontrast und Muster sicherer.' },
+          kleidung_alltag: { label: 'Kleidung im Alltag', tip: 'Beurteile Kleidung nach Funktion, Pflege und Anlass.' }
+        },
+        7: {
+          design_mode: { label: 'Design und Mode', tip: 'Mode sendet Botschaften und wird gezielt gestaltet.' },
+          produktion: { label: 'Herstellung und Verarbeitung', tip: 'Vom Rohstoff bis zum Produkt gibt es viele Arbeitsschritte.' },
+          nachhaltigkeit_textil: { label: 'Nachhaltigkeit und Konsum', tip: 'Achte auf Produktionsbedingungen, Qualität und bewussten Konsum.' }
+        },
+        8: {
+          design_mode: { label: 'Design und Mode', tip: 'Mode wird geplant, präsentiert und bewertet.' },
+          produktion: { label: 'Herstellung und Verarbeitung', tip: 'Materialwahl und Verarbeitung beeinflussen Funktion und Qualität.' },
+          nachhaltigkeit_textil: { label: 'Nachhaltigkeit und Konsum', tip: 'Textilkonsum hat ökologische und soziale Folgen.' }
+        },
+        9: {
+          textiltechnik: { label: 'Textiltechnik', tip: 'Maschinen, Fasern und Verarbeitung bestimmen textile Produkte.' },
+          mode_wirkung: { label: 'Mode und Wirkung', tip: 'Kleidung beeinflusst Identität, Rollenbilder und Wahrnehmung.' },
+          berufe_textil: { label: 'Berufe und Wirtschaft', tip: 'Textilberufe verbinden Gestaltung, Technik und Vermarktung.' }
+        },
+        10: {
+          textiltechnik: { label: 'Textiltechnik', tip: 'Analysiere textile Produkte nach Aufbau, Material und Funktion.' },
+          mode_wirkung: { label: 'Mode und Wirkung', tip: 'Mode kann gesellschaftliche Entwicklungen spiegeln und beeinflussen.' },
+          berufe_textil: { label: 'Berufe und Wirtschaft', tip: 'Plane textilbezogene Entscheidungen mit Blick auf Beruf und Markt.' }
+        }
+      }
+    }
+  };
+
+  function getEffectiveClassLevel() {
+    return APP_STATE.classLevel;
+  }
+
+  function getTopicsForSubject(subjectKey, classLevelOverride) {
+    const config = SUBJECT_CONFIG[subjectKey];
+    if (!config) {
+      return {};
+    }
+    const effectiveClassLevel = String(classLevelOverride || getEffectiveClassLevel());
+    if (config.topicsByClass) {
+      return config.topicsByClass[effectiveClassLevel] || config.topicsByClass['5'] || config.topicsByClass['7'] || config.topicsByClass['9'] || {};
+    }
+    return config.topics || {};
+  }
+
+  function getCurrentSubjectConfig(classLevelOverride) {
+    const config = SUBJECT_CONFIG[APP_STATE.subject];
+    return {
+      label: config.label,
+      description: config.description,
+      topics: getTopicsForSubject(APP_STATE.subject, classLevelOverride)
+    };
+  }
+
+  function getCurrentTopicConfig() {
+    const subjectConfig = getCurrentSubjectConfig();
+    return subjectConfig.topics[APP_STATE.topic] || null;
+  }
+
+  function getCurrentSubtopics() {
+    const topicConfig = getCurrentTopicConfig();
+    return topicConfig && topicConfig.subtopics ? topicConfig.subtopics : null;
+  }
+
+  function syncSelectedTopic() {
+    const topics = getCurrentSubjectConfig().topics;
+    if (!topics[APP_STATE.topic]) {
+      APP_STATE.topic = Object.keys(topics)[0] || '';
+    }
+  }
+
+  function handleBrandImageError() {
+    const mark = document.getElementById('brandMark');
+    mark.innerHTML = 'LN';
+  }
+
+  function setActiveView(viewId) {
+    APP_STATE.activeView = viewId;
+    document.getElementById('homeView').classList.toggle('hidden', viewId !== 'homeView');
+    document.getElementById('tasksView').classList.toggle('hidden', viewId !== 'tasksView');
+    document.getElementById('tipsView').classList.toggle('hidden', viewId !== 'tipsView');
+    document.getElementById('testView').classList.toggle('hidden', viewId !== 'testView');
+    document.getElementById('classesView').classList.toggle('hidden', viewId !== 'classesView');
+    document.getElementById('profileView').classList.toggle('hidden', viewId !== 'profileView');
+    const classesTrigger = document.getElementById('classesTrigger');
+    const profileTrigger = document.getElementById('profileTrigger');
+    const testTabButton = document.getElementById('testTabButton');
+    if (classesTrigger) {
+      classesTrigger.classList.toggle('active', viewId === 'classesView');
+    }
+    if (profileTrigger) {
+      profileTrigger.classList.toggle('active', viewId === 'profileView');
+    }
+    if (testTabButton) {
+      testTabButton.classList.toggle('active', viewId === 'testView');
+    }
+  }
+
+  function setClassLevel(value) {
+    APP_STATE.classLevel = String(value || '5');
+    APP_STATE.openDropdown = '';
+    resetTestState();
+    syncSelectedTopic();
+    syncSelectedSubtopic();
+    renderClassButtons();
+    renderDashboard();
+    renderSubjectCards();
+    updateLabels();
+  }
+
+  function setSubject(value) {
+    APP_STATE.subject = value || 'mathe';
+    APP_STATE.openDropdown = '';
+    resetTestState();
+    const topics = getCurrentSubjectConfig().topics;
+    APP_STATE.topic = Object.keys(topics)[0];
+    APP_STATE.subtopic = '';
+    syncSelectedSubtopic();
+    renderDashboard();
+    renderSubjectCards();
+    updateLabels();
+  }
+
+  function setTopic(value) {
+    APP_STATE.topic = value;
+    APP_STATE.subtopic = '';
+    APP_STATE.openDropdown = '';
+    resetTestState();
+    syncSelectedSubtopic();
+    renderDashboard();
+    updateLabels();
+  }
+
+  function setSubtopic(value) {
+    APP_STATE.subtopic = value || '';
+    APP_STATE.openDropdown = '';
+    resetTestState();
+    renderDashboard();
+    updateLabels();
+  }
+
+  function resetTestState() {
+    APP_STATE.testLoading = false;
+    APP_STATE.testTasks = [];
+    APP_STATE.test.submitted = false;
+    APP_STATE.test.result = null;
+  }
+
+  function syncSelectedSubtopic() {
+    const subtopics = getCurrentSubtopics();
+    if (!subtopics) {
+      APP_STATE.subtopic = '';
+      return;
+    }
+    if (!APP_STATE.subtopic || !subtopics[APP_STATE.subtopic]) {
+      APP_STATE.subtopic = Object.keys(subtopics)[0];
+    }
+  }
+
+  function getSelectedSubtopicLabel() {
+    const subtopics = getCurrentSubtopics();
+    if (!subtopics || !APP_STATE.subtopic || !subtopics[APP_STATE.subtopic]) {
+      return '';
+    }
+    return subtopics[APP_STATE.subtopic].label;
+  }
+
+  function renderClassButtons() {
+    const classList = document.getElementById('classList');
+    const classes = ['5', '6', '7', '8', '9', '10'];
+
+    classList.innerHTML = classes.map((classLevel) => {
+      const active = APP_STATE.classLevel === classLevel ? 'active' : '';
+      return '<button class="' + active + '" data-class-level="' + classLevel + '" onclick="setClassLevel(\'' + classLevel + '\')">Klasse ' + classLevel + '</button>';
+    }).join('');
+
+    renderCustomDropdown('classDropdown', classes.map(function(classLevel) {
+      return { value: classLevel, label: 'Klasse ' + classLevel };
+    }), APP_STATE.classLevel, 'setClassLevel');
+  }
+
+  function renderSubjectDropdown() {
+    renderCustomDropdown('subjectDropdown', SUBJECT_ORDER.map(function(key) {
+      return { value: key, label: SUBJECT_CONFIG[key].label, className: SUBJECT_DROPDOWN_CLASSES[key] || '' };
+    }), APP_STATE.subject, 'setSubject');
+  }
+
+  function renderTopicDropdown() {
+    const topics = getCurrentSubjectConfig().topics;
+    renderCustomDropdown('topicDropdown', Object.keys(topics).map(function(key) {
+      return { value: key, label: topics[key].label };
+    }), APP_STATE.topic, 'setTopic');
+  }
+
+  function renderSubtopicDropdown() {
+    const wrap = document.getElementById('subtopicDropdownWrap');
+    const subtopics = getCurrentSubtopics();
+
+    if (!subtopics) {
+      wrap.classList.add('hidden');
+      if (APP_STATE.openDropdown === 'subtopicDropdown') {
+        APP_STATE.openDropdown = '';
+      }
+      return;
+    }
+
+    wrap.classList.remove('hidden');
+    renderCustomDropdown('subtopicDropdown', Object.keys(subtopics).map(function(key) {
+      return { value: key, label: subtopics[key].label };
+    }), APP_STATE.subtopic, 'setSubtopic');
+  }
+
+  function renderCustomDropdown(dropdownId, options, selectedValue, onSelectName) {
+    const menu = document.getElementById(dropdownId);
+    const trigger = document.getElementById(dropdownId + 'Button');
+    const field = document.getElementById(dropdownId + 'Field') || document.getElementById(dropdownId + 'Wrap');
+    const selectedOption = options.find(function(option) {
+      return option.value === selectedValue;
+    }) || options[0] || { label: '', value: '' };
+    const isOpen = APP_STATE.openDropdown === dropdownId;
+
+    if (trigger) {
+      trigger.innerHTML = '<span class="dropdown-trigger-text">' + escapeHtml(selectedOption.label) + '</span>';
+      trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    if (menu) {
+      menu.innerHTML = options.map(function(option) {
+        const active = option.value === selectedValue ? ' active' : '';
+        const extraClass = option.className ? ' ' + option.className : '';
+        return '<button type="button" class="dropdown-option' + extraClass + active + '" onclick="' + onSelectName + '(\'' + escapeJs(option.value) + '\')">' + escapeHtml(option.label) + '</button>';
+      }).join('');
+    }
+
+    if (field) {
+      field.classList.toggle('open', isOpen);
+    }
+  }
+
+  function toggleDropdown(dropdownId) {
+    APP_STATE.openDropdown = APP_STATE.openDropdown === dropdownId ? '' : dropdownId;
+    renderDashboard();
+  }
+
+  function renderDashboard() {
+    renderClassButtons();
+    renderSubjectDropdown();
+    renderTopicDropdown();
+    renderSubtopicDropdown();
+  }
+
+  function renderSubjectCards() {
+    const cardRoot = document.getElementById('subjectCards');
+    const effectiveClass = getEffectiveClassLevel();
+    cardRoot.innerHTML = SUBJECT_ORDER.map((key) => {
+      const subject = {
+        label: SUBJECT_CONFIG[key].label,
+        description: getCardDescriptionForSubject(key, effectiveClass),
+        topics: getTopicsForCards(key, effectiveClass)
+      };
+      const active = APP_STATE.subject === key ? ' active' : '';
+      const topicChips = Object.keys(subject.topics).map(function(topicKey) {
+        return '<span class="topic-chip">' + escapeHtml(subject.topics[topicKey].label) + '</span>';
+      }).join('');
+      const cardActions = key === 'religion_ethik'
+        ? '' +
+          '<button class="start-button" onclick="activateSubjectTopicAndOpenTasks(\'religion_ethik\', \'katholisch\')">Katholisch</button>' +
+          '<button class="tips-button" onclick="activateSubjectTopicAndOpenTasks(\'religion_ethik\', \'evangelisch\')">Evangelisch</button>' +
+          '<button class="choose-button" onclick="activateSubjectTopicAndOpenTasks(\'religion_ethik\', \'philosophie\')">Philosophie / Ethik</button>' +
+          '<button class="religion-select-button" onclick="activateSubject(\'religion_ethik\')">Nur Fach wählen</button>'
+        : '' +
+          '<button class="start-button" onclick="activateSubjectAndOpenTasks(\'' + key + '\')">Aufgaben starten</button>' +
+          '<button class="tips-button" onclick="activateSubjectAndOpenTips(\'' + key + '\')">Tipps ansehen</button>' +
+          '<button class="choose-button" onclick="activateSubject(\'' + key + '\')">Fach wählen</button>';
+      return '' +
+        '<article class="subject-card subject-' + key + active + '" data-subject-key="' + key + '">' +
+        '<h3>' + escapeHtml(subject.label) + '</h3>' +
+        '<p>' + escapeHtml(subject.description) + '</p>' +
+        '<div class="topic-chip-row">' + topicChips + '</div>' +
+        '<div class="card-actions">' +
+        cardActions +
+        '</div>' +
+        '</article>';
+    }).join('');
+  }
+
+  function getCurrentDeutschTopicsForCards(classLevelOverride) {
+    const effectiveClassLevel = String(classLevelOverride || getEffectiveClassLevel());
+    return SUBJECT_CONFIG.deutsch.topicsByClass[effectiveClassLevel] || SUBJECT_CONFIG.deutsch.topicsByClass['5'];
+  }
+
+  function getCurrentBiologieTopicsForCards(classLevelOverride) {
+    const effectiveClassLevel = String(classLevelOverride || getEffectiveClassLevel());
+    return SUBJECT_CONFIG.biologie.topicsByClass[effectiveClassLevel] || SUBJECT_CONFIG.biologie.topicsByClass['5'];
+  }
+
+  function getTopicsForCards(subjectKey, classLevelOverride) {
+    if (subjectKey === 'deutsch') {
+      return getCurrentDeutschTopicsForCards(classLevelOverride);
+    }
+    if (subjectKey === 'biologie') {
+      return getCurrentBiologieTopicsForCards(classLevelOverride);
+    }
+    return getTopicsForSubject(subjectKey, classLevelOverride);
+  }
+
+  function getCardDescriptionForSubject(subjectKey, classLevelOverride) {
+    const effectiveClassLevel = String(classLevelOverride || getEffectiveClassLevel());
+    if (subjectKey === 'deutsch') {
+      return 'Deutsch-Inhalte passend zum NRW-Lehrplan für Klasse ' + effectiveClassLevel + '.';
+    }
+    if (subjectKey === 'biologie') {
+      return 'Biologie-Inhalte passend zum NRW-Lehrplan für Klasse ' + effectiveClassLevel + '.';
+    }
+    if (SUBJECT_CONFIG[subjectKey].topicsByClass) {
+      return SUBJECT_CONFIG[subjectKey].label + '-Inhalte passend zur Klassenstufe ' + effectiveClassLevel + '.';
+    }
+    return SUBJECT_CONFIG[subjectKey].description;
+  }
+
+  function activateSubject(subjectKey) {
+    setSubject(subjectKey);
+  }
+
+  function activateSubjectTopicAndOpenTasks(subjectKey, topicKey) {
+    setSubject(subjectKey);
+    setTopic(topicKey);
+    openTasksForCurrentTopic();
+  }
+
+  function activateSubjectAndOpenTasks(subjectKey) {
+    setSubject(subjectKey);
+    openTasksForCurrentTopic();
+  }
+
+  function activateSubjectAndOpenTips(subjectKey) {
+    setSubject(subjectKey);
+    openTips();
+  }
+
+  function updateLabels() {
+    const subjectConfig = getCurrentSubjectConfig();
+    const topicConfig = getCurrentTopicConfig();
+    const subtopicLabel = getSelectedSubtopicLabel();
+
+    const metaText = subjectConfig.label + ' · Klasse ' + APP_STATE.classLevel + ' · ' + (topicConfig ? topicConfig.label : '');
+    document.getElementById('tasksMeta').textContent = (subtopicLabel ? metaText + ' · ' + subtopicLabel : metaText) + ' · ' + APP_STATE.settings.taskCount + ' Aufgaben';
+    document.getElementById('tipsMeta').textContent = subtopicLabel ? metaText + ' · ' + subtopicLabel : metaText;
+    document.getElementById('testMeta').textContent = (subtopicLabel ? metaText + ' · ' + subtopicLabel : metaText) + ' · 20 Aufgaben · automatische Note';
+    document.getElementById('classesMeta').textContent = APP_STATE.auth.user && APP_STATE.auth.user.role === 'teacher'
+      ? 'Lehrerkonto aktiv · Erstelle Klassen-Codes und verfolge Aufgaben, Prüfungen und Hilfe-Anfragen.'
+      : 'Der Bereich „Klassen“ steht nur im Lehrermodus zur Verfügung.';
+    if (document.getElementById('helpChatContext')) {
+      updateHelpContext();
+    }
+  }
+
+  function goHome() {
+    setActiveView('homeView');
+  }
+
+  function openTasks() {
+    setActiveView('tasksView');
+  }
+
+  function openTips() {
+    setActiveView('tipsView');
+    renderTips();
+  }
+
+  function openTest() {
+    setActiveView('testView');
+    loadTest();
+  }
+
+  function openClassesView() {
+    if (!ensureTeacher()) {
+      return;
+    }
+    setActiveView('classesView');
+    loadTeacherDashboard();
+  }
+
+  function openProfileView() {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+    setActiveView('profileView');
+    renderProfileView();
+  }
+
+  function openTasksForCurrentTopic() {
+    openTasks();
+    loadTasks();
+  }
+
+  function openHelpChat() {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+    APP_STATE.helpTaskIndex = null;
+    updateHelpContext();
+    renderHelpChatHistory();
+    document.getElementById('helpChatOverlay').classList.remove('hidden');
+    syncModalScrollLock();
+  }
+
+  function openHelpChatForTask(taskIndex) {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+    APP_STATE.helpTaskIndex = taskIndex;
+    updateHelpContext();
+    renderHelpChatHistory();
+    document.getElementById('helpChatOverlay').classList.remove('hidden');
+    syncModalScrollLock();
+  }
+
+  function closeHelpChat() {
+    document.getElementById('helpChatOverlay').classList.add('hidden');
+    syncModalScrollLock();
+  }
+
+  function openSettings() {
+    renderSettings();
+    document.getElementById('settingsOverlay').classList.remove('hidden');
+    syncModalScrollLock();
+  }
+
+  function closeSettings() {
+    document.getElementById('settingsOverlay').classList.add('hidden');
+    syncModalScrollLock();
+  }
+
+  function syncModalScrollLock() {
+    const hasOpenModal = !document.getElementById('settingsOverlay').classList.contains('hidden')
+      || !document.getElementById('helpChatOverlay').classList.contains('hidden');
+    setBodyScrollLock(hasOpenModal);
+  }
+
+  function setBodyScrollLock(shouldLock) {
+    const body = document.body;
+    const currentOffset = body.dataset.scrollLockY || '0';
+
+    if (shouldLock) {
+      if (!body.classList.contains('modal-open')) {
+        body.dataset.scrollLockY = String(window.scrollY || window.pageYOffset || 0);
+        body.style.top = '-' + body.dataset.scrollLockY + 'px';
+      }
+      body.classList.add('modal-open');
+      return;
+    }
+
+    body.classList.remove('modal-open');
+    body.style.top = '';
+    delete body.dataset.scrollLockY;
+    window.scrollTo(0, Math.abs(parseInt(currentOffset, 10) || 0));
+  }
+
+  function updateHelpContext() {
+    const subjectConfig = getCurrentSubjectConfig();
+    const topicConfig = getCurrentTopicConfig();
+    const subtopicLabel = getSelectedSubtopicLabel();
+    const context = [
+      'Klasse ' + APP_STATE.classLevel,
+      subjectConfig.label,
+      topicConfig ? topicConfig.label : ''
+    ];
+
+    if (subtopicLabel) {
+      context.push(subtopicLabel);
+    }
+
+    if (APP_STATE.helpTaskIndex !== null && APP_STATE.tasks[APP_STATE.helpTaskIndex]) {
+      context.push('Aufgabe ' + (APP_STATE.helpTaskIndex + 1));
+    }
+
+    document.getElementById('helpChatContext').textContent = 'Aktueller Lernkontext: ' + context.filter(Boolean).join(' · ');
+  }
+
+  function appendHelpMessage(role, text) {
+    const messages = document.getElementById('helpChatMessages');
+    const author = role === 'user' ? 'Du' : 'Lernova Hilfe';
+    const className = role === 'user' ? 'chat-message user' : 'chat-message bot';
+    const node = document.createElement('div');
+    node.className = className;
+    node.innerHTML = '<strong>' + escapeHtml(author) + '</strong><p>' + escapeHtml(text) + '</p>';
+    messages.appendChild(node);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function renderHelpChatHistory() {
+    const messages = document.getElementById('helpChatMessages');
+    messages.innerHTML = '';
+    const history = APP_STATE.progress.profile && Array.isArray(APP_STATE.progress.profile.chatHistory)
+      ? APP_STATE.progress.profile.chatHistory
+      : [];
+
+    history.forEach(function(entry) {
+      appendHelpMessage(entry.role === 'assistant' ? 'bot' : 'user', entry.text || '');
+    });
+  }
+
+  function setHelpLoading(isLoading) {
+    APP_STATE.helpLoading = isLoading;
+    const button = document.getElementById('helpChatSendButton');
+    button.disabled = isLoading;
+    button.textContent = isLoading ? 'Wird gesendet ...' : 'Frage senden';
+  }
+
+  function sendHelpMessage() {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+
+    if (APP_STATE.helpLoading) {
+      return;
+    }
+
+    const input = document.getElementById('helpChatInput');
+    const message = input.value.trim();
+    if (!message) {
+      return;
+    }
+
+    if (!APP_STATE.progress.profile) {
+      APP_STATE.progress.profile = { chatHistory: [] };
+    }
+    if (!Array.isArray(APP_STATE.progress.profile.chatHistory)) {
+      APP_STATE.progress.profile.chatHistory = [];
+    }
+    APP_STATE.progress.profile.chatHistory.push({ role: 'user', text: message });
+    APP_STATE.progress.profile.chatHistory = APP_STATE.progress.profile.chatHistory.slice(-5);
+    appendHelpMessage('user', message);
+    input.value = '';
+    setHelpLoading(true);
+
+    google.script.run
+      .withSuccessHandler(function(responseText) {
+        setHelpLoading(false);
+        if (!APP_STATE.progress.profile) {
+          APP_STATE.progress.profile = { chatHistory: [] };
+        }
+        APP_STATE.progress.profile.chatHistory.push({ role: 'assistant', text: responseText });
+        APP_STATE.progress.profile.chatHistory = APP_STATE.progress.profile.chatHistory.slice(-5);
+        appendHelpMessage('bot', responseText);
+      })
+      .withFailureHandler(function(error) {
+        setHelpLoading(false);
+        if (error && /anmeldung|erneut anmelden|abgelaufen/i.test(error.message || '')) {
+          handleAuthFailure(error, 'Die Anmeldung ist abgelaufen.');
+          return;
+        }
+        appendHelpMessage('bot', 'Die Hilfe konnte gerade nicht antworten. ' + (error && error.message ? error.message : 'Bitte versuche es später erneut.'));
+      })
+      .getLernovaHilfe({
+        authToken: APP_STATE.auth.token,
+        klasse: APP_STATE.classLevel,
+        fach: getCurrentSubjectConfig().label,
+        thema: getCurrentTopicConfig() ? getCurrentTopicConfig().label : '',
+        unterthema: getSelectedSubtopicLabel(),
+        message: message,
+        aktuelleAufgabe: getCurrentHelpTaskText(),
+        aktuelleAntwort: getCurrentHelpTaskAnswer()
+      });
+  }
+
+  function handleHelpChatKeydown(event) {
+    if (!APP_STATE.settings.enterSendsChat) {
+      return;
+    }
+
+    if (event.key !== 'Enter' || event.shiftKey) {
+      return;
+    }
+
+    event.preventDefault();
+    sendHelpMessage();
+  }
+
+  function getCurrentHelpTaskText() {
+    if (APP_STATE.helpTaskIndex === null || !APP_STATE.tasks[APP_STATE.helpTaskIndex]) {
+      return '';
+    }
+
+    const task = APP_STATE.tasks[APP_STATE.helpTaskIndex];
+    return task.frage || '';
+  }
+
+  function getCurrentHelpTaskAnswer() {
+    if (APP_STATE.helpTaskIndex === null || !APP_STATE.tasks[APP_STATE.helpTaskIndex]) {
+      return '';
+    }
+
+    const answer = getTaskAnswer(APP_STATE.helpTaskIndex);
+    if (typeof answer === 'string') {
+      return answer;
+    }
+    return '';
+  }
+
+  function loadTasks() {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+
+    const requestedTaskCount = Math.min(Math.max(parseInt(APP_STATE.settings.taskCount, 10) || 5, 1), 20);
+
+    APP_STATE.loading = true;
+    renderTasks();
+    google.script.run
+      .withSuccessHandler(function(tasks) {
+        APP_STATE.loading = false;
+        APP_STATE.tasks = Array.isArray(tasks) ? tasks : [];
+        APP_STATE.taskResults = [];
+        renderTasks();
+      })
+      .withFailureHandler(function(error) {
+        APP_STATE.loading = false;
+        APP_STATE.tasks = [];
+        if (error && /anmeldung|erneut anmelden|abgelaufen/i.test(error.message || '')) {
+          handleAuthFailure(error, 'Die Anmeldung ist abgelaufen.');
+          return;
+        }
+        document.getElementById('tasksPanel').innerHTML =
+          '<div class="empty-state">Die Aufgaben konnten nicht geladen werden. ' + escapeHtml(error && error.message ? error.message : 'Bitte versuche es erneut.') + '</div>';
+      })
+      .getTasks(APP_STATE.auth.token, APP_STATE.subject, APP_STATE.topic, APP_STATE.classLevel, requestedTaskCount, APP_STATE.subtopic || '');
+  }
+
+  function loadTest() {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+
+    APP_STATE.testLoading = true;
+    APP_STATE.testTasks = [];
+    APP_STATE.test.submitted = false;
+    APP_STATE.test.result = null;
+    renderTest();
+
+    google.script.run
+      .withSuccessHandler(function(tasks) {
+        APP_STATE.testLoading = false;
+        APP_STATE.testTasks = Array.isArray(tasks) ? tasks : [];
+        renderTest();
+      })
+      .withFailureHandler(function(error) {
+        APP_STATE.testLoading = false;
+        APP_STATE.testTasks = [];
+        if (error && /anmeldung|erneut anmelden|abgelaufen/i.test(error.message || '')) {
+          handleAuthFailure(error, 'Die Anmeldung ist abgelaufen.');
+          return;
+        }
+        document.getElementById('testPanel').innerHTML =
+          '<div class="empty-state">Der Test konnte nicht geladen werden. ' + escapeHtml(error && error.message ? error.message : 'Bitte versuche es erneut.') + '</div>';
+      })
+      .getTestTasks(APP_STATE.auth.token, APP_STATE.subject, APP_STATE.topic, APP_STATE.classLevel, APP_STATE.subtopic || '');
+  }
+
+  function renderTasks() {
+    const panel = document.getElementById('tasksPanel');
+    renderPlayerProfile();
+    if (APP_STATE.loading) {
+      panel.innerHTML = '<div class="loading-state">Passende Aufgaben werden geladen ...</div>';
+      return;
+    }
+
+    if (!APP_STATE.tasks.length) {
+      panel.innerHTML = '<div class="empty-state">Noch keine Aufgaben geladen. Öffne ein Thema über das Dashboard.</div>';
+      return;
+    }
+
+    panel.innerHTML = '<div class="task-stack">' + APP_STATE.tasks.map(function(task, index) {
+      const storedResult = APP_STATE.taskResults[index];
+      const isCheckLocked = !!(storedResult && storedResult.locked);
+      return '' +
+        '<article class="task-card" data-task-index="' + index + '">' +
+        '<h3>Aufgabe ' + (index + 1) + '</h3>' +
+        '<p>' + escapeHtml(task.frage || '') + '</p>' +
+        renderTaskInput(task, index) +
+        '<div class="task-actions">' +
+        '<button class="primary-button" onclick="checkTask(' + index + ')"' + (isCheckLocked ? ' disabled' : '') + '>Prüfen</button>' +
+        '<button class="ghost-button" onclick="showSolution(' + index + ')">Lösung zeigen</button>' +
+        '<button class="ghost-button" onclick="openHelpChatForTask(' + index + ')">Hilfe</button>' +
+        '</div>' +
+        '<div class="result' + (storedResult ? ' ' + escapeHtml(storedResult.className || '') : '') + '" id="taskResult' + index + '">' + (storedResult ? escapeHtml(storedResult.message || '') : '') + '</div>' +
+        '</article>';
+    }).join('') + '</div>';
+  }
+
+  function renderPlayerProfile() {
+    const profile = APP_STATE.progress.profile || (APP_STATE.auth.user && APP_STATE.auth.user.profile) || null;
+    const headline = document.getElementById('profileHeadline');
+    const summary = document.getElementById('profileSummary');
+    const xp = document.getElementById('profileXp');
+    const level = document.getElementById('profileLevel');
+    const streak = document.getElementById('profileStreak');
+    const accuracy = document.getElementById('profileAccuracy');
+    const progressBar = document.getElementById('profileProgressBar');
+    const progressLabel = document.getElementById('profileProgressLabel');
+    const badges = document.getElementById('profileBadges');
+
+    if (!headline) {
+      return;
+    }
+
+    if (!profile) {
+      headline.textContent = 'Level 1 startet';
+      summary.textContent = 'Sammle XP, halte deine Streak und schalte Badges frei.';
+      xp.textContent = '0';
+      level.textContent = '1';
+      streak.textContent = '0';
+      accuracy.textContent = '0 %';
+      progressBar.style.width = '0%';
+      progressLabel.textContent = '0 % bis Level 2 · 50 XP fehlen';
+      badges.innerHTML = '<span class="badge-pill">Noch keine Badges</span>';
+      return;
+    }
+
+    const total = profile.stats && profile.stats.total ? profile.stats.total : 0;
+    const correct = profile.stats && profile.stats.correct ? profile.stats.correct : 0;
+    const percent = total ? Math.round((correct / total) * 100) : 0;
+    const progress = Math.round((profile.levelProgress || 0) * 100);
+    const progressDetails = profile.levelProgressDetails || {};
+    const xpNeeded = progressDetails.xpNeeded || 0;
+
+    headline.textContent = 'Level ' + (profile.level || 1) + ' | ' + ((APP_STATE.auth.user && APP_STATE.auth.user.displayName) || 'Spielstand');
+    summary.textContent = '🎮 Sammle XP, halte deine Streak und knacke dein nächstes Level.';
+    xp.textContent = String(profile.xp || 0);
+    level.textContent = String(profile.level || 1);
+    streak.textContent = String(profile.streak || 0);
+    accuracy.textContent = percent + ' %';
+    progressBar.style.width = progress + '%';
+    progressLabel.textContent = progress + ' % bis Level ' + ((profile.level || 1) + 1) + ' · ' + xpNeeded + ' XP fehlen';
+    badges.innerHTML = profile.badges && profile.badges.length
+      ? profile.badges.map(function(badge) {
+        const badgeLabel = (badge.emoji ? badge.emoji + ' ' : '') + (badge.title || badge.id || '');
+        return '<span class="badge-pill" title="' + escapeAttribute(badge.description || '') + '">' + escapeHtml(badgeLabel) + '</span>';
+      }).join('')
+      : '<span class="badge-pill">Noch keine Badges</span>';
+    renderProfileView();
+  }
+
+  function renderProfileView() {
+    const profile = APP_STATE.progress.profile || (APP_STATE.auth.user && APP_STATE.auth.user.profile) || null;
+    const headline = document.getElementById('profilePageHeadline');
+    const summary = document.getElementById('profilePageSummary');
+    const xp = document.getElementById('profilePageXp');
+    const level = document.getElementById('profilePageLevel');
+    const streak = document.getElementById('profilePageStreak');
+    const accuracy = document.getElementById('profilePageAccuracy');
+    const progressBar = document.getElementById('profilePageProgressBar');
+    const progressLabel = document.getElementById('profilePageProgressLabel');
+    const badges = document.getElementById('profilePageBadges');
+    const statsPanel = document.getElementById('profileStatsPanel');
+    const errorsPanel = document.getElementById('profileErrorsPanel');
+    const profileClassStatus = document.getElementById('profileClassStatus');
+    const profileClassesPanel = document.getElementById('profileClassesPanel');
+
+    if (!headline) {
+      return;
+    }
+
+    if (!profile) {
+      headline.textContent = 'Noch kein Profil geladen';
+      summary.textContent = 'Sobald du angemeldet bist, siehst du hier deine Statistik.';
+      xp.textContent = '0';
+      level.textContent = '1';
+      streak.textContent = '0';
+      accuracy.textContent = '0 %';
+      progressBar.style.width = '0%';
+      progressLabel.textContent = '0 % bis Level 2';
+      badges.innerHTML = '<span class="badge-pill">Noch keine Badges</span>';
+      profileClassStatus.textContent = 'Melde dich an, um einer Klasse beizutreten.';
+      profileClassesPanel.innerHTML = '<div class="empty-state">Noch keine Klassen verknüpft.</div>';
+      statsPanel.innerHTML = '<div class="empty-state">Noch keine Statistik vorhanden.</div>';
+      errorsPanel.innerHTML = '<div class="empty-state">Noch keine Fehlerdaten vorhanden.</div>';
+      return;
+    }
+
+    const total = profile.stats && profile.stats.total ? profile.stats.total : 0;
+    const correct = profile.stats && profile.stats.correct ? profile.stats.correct : 0;
+    const wrong = profile.stats && profile.stats.wrong ? profile.stats.wrong : 0;
+    const percent = total ? Math.round((correct / total) * 100) : 0;
+    const progress = Math.round((profile.levelProgress || 0) * 100);
+    const errorTopics = profile.errorTopics || {};
+    const sortedTopics = Object.keys(errorTopics).sort(function(a, b) {
+      return (errorTopics[b] || 0) - (errorTopics[a] || 0);
+    });
+
+    headline.textContent = (APP_STATE.auth.user && APP_STATE.auth.user.displayName ? APP_STATE.auth.user.displayName : 'Dein Profil') + ' | Level ' + (profile.level || 1);
+    summary.textContent = 'Hier siehst du deinen gesamten Fortschritt über XP, Serien, Trefferquote und typische Fehler.';
+    xp.textContent = String(profile.xp || 0);
+    level.textContent = String(profile.level || 1);
+    streak.textContent = String(profile.streak || 0);
+    accuracy.textContent = percent + ' %';
+    progressBar.style.width = progress + '%';
+    progressLabel.textContent = progress + ' % bis Level ' + ((profile.level || 1) + 1);
+    badges.innerHTML = profile.badges && profile.badges.length
+      ? profile.badges.map(function(badge) {
+        const badgeLabel = (badge.emoji ? badge.emoji + ' ' : '') + (badge.title || badge.id || '');
+        return '<span class="badge-pill" title="' + escapeAttribute(badge.description || '') + '">' + escapeHtml(badgeLabel) + '</span>';
+      }).join('')
+      : '<span class="badge-pill">Noch keine Badges</span>';
+
+    statsPanel.innerHTML =
+      '<div class="stats-grid">' +
+      '<div class="stats-tile"><span>Aufgaben gesamt</span><strong>' + escapeHtml(String(total)) + '</strong></div>' +
+      '<div class="stats-tile"><span>Richtig</span><strong>' + escapeHtml(String(correct)) + '</strong></div>' +
+      '<div class="stats-tile"><span>Falsch</span><strong>' + escapeHtml(String(wrong)) + '</strong></div>' +
+      '<div class="stats-tile"><span>Mastery</span><strong>' + escapeHtml(String(Math.round((profile.mastery || 0) * 100))) + ' %</strong></div>' +
+      '</div>';
+
+    errorsPanel.innerHTML = sortedTopics.length
+      ? '<div class="profile-list">' + sortedTopics.slice(0, 6).map(function(topicKey) {
+        return '<div class="profile-list-item"><strong>' + escapeHtml(topicKey) + '</strong><br>' + escapeHtml(String(errorTopics[topicKey] || 0)) + ' Fehler</div>';
+      }).join('') + '</div>'
+      : '<div class="empty-state">Noch keine häufigen Fehler erfasst.</div>';
+
+    renderProfileClassroomPanel(profileClassStatus, profileClassesPanel);
+  }
+
+  function renderProfileClassroomPanel(statusNode, panelNode) {
+    if (!statusNode || !panelNode) {
+      return;
+    }
+
+    const memberships = APP_STATE.auth.user && Array.isArray(APP_STATE.auth.user.classMemberships)
+      ? APP_STATE.auth.user.classMemberships
+      : [];
+    const activeClassId = APP_STATE.auth.user && APP_STATE.auth.user.classId ? APP_STATE.auth.user.classId : '';
+
+    if (!APP_STATE.auth.user) {
+      statusNode.textContent = 'Melde dich an, um einer Klasse beizutreten.';
+      statusNode.className = 'teacher-status';
+      panelNode.innerHTML = '<div class="empty-state">Noch keine Klassen verknüpft.</div>';
+      return;
+    }
+
+    if (!memberships.length) {
+      statusNode.textContent = 'Du bist aktuell keiner Klasse beigetreten.';
+      statusNode.className = 'teacher-status';
+      panelNode.innerHTML = '<div class="empty-state">Gib oben einen Klassen-Code ein, um beizutreten.</div>';
+      return;
+    }
+
+    const activeClass = memberships.find(function(item) {
+      return item.classId === activeClassId;
+    }) || memberships[0];
+    const activeInfo = [activeClass.classLevel, activeClass.teacherName].filter(Boolean).join(' · ');
+
+    statusNode.textContent = 'Aktive Klasse: ' + activeClass.className + (activeInfo ? ' · ' + activeInfo : '');
+    statusNode.className = 'teacher-status success';
+    panelNode.innerHTML = '<div class="teacher-list">' + memberships.map(function(item) {
+      const meta = [item.classLevel, item.teacherName, item.joinedAt ? 'beigetreten ' + formatTimestamp(item.joinedAt) : ''].filter(Boolean).join(' · ');
+      const isActive = item.classId === activeClassId;
+      return '' +
+        '<article class="teacher-class-item">' +
+        '<strong>' + escapeHtml(item.className) + '</strong>' +
+        '<div class="teacher-class-meta">' + escapeHtml(meta || 'Klasse ohne Zusatzangabe') + '</div>' +
+        '<div class="teacher-class-actions">' +
+        '<span class="teacher-code-pill">' + escapeHtml(item.classCode) + '</span>' +
+        '<button type="button" class="ghost-button" ' + (isActive ? 'disabled' : 'onclick="switchClassroomFromProfile(\'' + escapeJs(item.classId) + '\')"') + '>' + (isActive ? 'Aktiv' : 'Als aktiv setzen') + '</button>' +
+        '</div>' +
+        '</article>';
+    }).join('') + '</div>';
+  }
+
+  function renderTaskInput(task, index) {
+    if (task.type === 'choice') {
+      return '<div class="choice-list">' + (task.optionen || []).map(function(option, optionIndex) {
+        return '' +
+          '<label class="choice-item">' +
+          '<input type="radio" name="choiceTask' + index + '" value="' + escapeAttribute(option) + '"' + (optionIndex === 0 ? '' : '') + '>' +
+          '<span>' + escapeHtml(option) + '</span>' +
+          '</label>';
+      }).join('') + '</div>';
+    }
+
+    if (task.type === 'order') {
+      const options = Array.isArray(task.optionen) ? task.optionen : [];
+      return '' +
+        '<div class="order-bank">' + options.map(function(option) {
+          return '<button type="button" class="order-chip" onclick="fillDropSlot(' + index + ', \'' + escapeJs(option) + '\')">' + escapeHtml(option) + '</button>';
+        }).join('') + '</div>' +
+        '<div class="order-slots" id="orderSlots' + index + '">' + (task.loesung || []).map(function(_, slotIndex) {
+          return '<button type="button" class="drop-slot" data-task-index="' + index + '" data-slot-index="' + slotIndex + '" onclick="clearDropSlot(' + index + ', ' + slotIndex + ')">Platz ' + (slotIndex + 1) + '</button>';
+        }).join('') + '</div>';
+    }
+
+    if (APP_STATE.subject === 'deutsch' && APP_STATE.topic === 'schreiben') {
+      return '<textarea class="task-textarea" id="taskInput' + index + '" placeholder="Schreibe hier deine Antwort ..." onkeydown="handleTaskInputKeydown(' + index + ', event)"></textarea>';
+    }
+
+    return '<input class="task-input" id="taskInput' + index + '" type="text" placeholder="Deine Antwort" onkeydown="handleTaskInputKeydown(' + index + ', event)">';
+  }
+
+  function renderTest() {
+    const panel = document.getElementById('testPanel');
+    if (APP_STATE.testLoading) {
+      panel.innerHTML = '<div class="loading-state">Der Test mit 20 Aufgaben wird vorbereitet ...</div>';
+      return;
+    }
+
+    if (!APP_STATE.testTasks.length) {
+      panel.innerHTML = '<div class="empty-state">Noch kein Test geladen. Öffne den Test-Tab erneut, um einen neuen Test zu starten.</div>';
+      return;
+    }
+
+    const result = APP_STATE.test.result;
+    const summary = result
+      ? '<div class="test-summary"><h3>Test ausgewertet: Note ' + escapeHtml(String(result.note)) + '</h3><p>Du hast ' + escapeHtml(String(result.correctCount)) + ' von ' + escapeHtml(String(result.totalCount)) + ' Aufgaben richtig gelöst. Das sind ' + escapeHtml(String(Math.round((result.ratio || 0) * 100))) + ' %.</p><div class="test-actions"><button class="primary-button" onclick="openTest()">Neuen Test starten</button></div></div>'
+      : '<div class="test-summary"><h3>Testmodus</h3><p>Der Test umfasst 20 automatisch prüfbare Aufgaben passend zu Fach, Thema und Klassenstufe. Am Ende bekommst du sofort deine Note.</p><div class="test-actions"><button class="primary-button" onclick="submitTest()">Test abgeben</button><button class="ghost-button" onclick="openTest()">Neu laden</button></div></div>';
+
+    panel.innerHTML = summary + '<div class="test-stack">' + APP_STATE.testTasks.map(function(task, index) {
+      const taskResult = result && result.results && result.results[index]
+        ? '<div class="result ' + (result.results[index].correct ? 'good' : 'bad') + '">' + escapeHtml(result.results[index].correct ? 'Richtig' : 'Nicht richtig') + (result.results[index].message ? ': ' + escapeHtml(result.results[index].message) : '') + '</div>'
+        : '<div class="result" id="testResult' + index + '"></div>';
+      return '' +
+        '<article class="task-card" data-test-task-index="' + index + '">' +
+        '<h3>Testaufgabe ' + (index + 1) + '</h3>' +
+        '<p>' + escapeHtml(task.frage || '') + '</p>' +
+        renderTestTaskInput(task, index) +
+        taskResult +
+        '</article>';
+    }).join('') + '</div>';
+  }
+
+  function renderTestTaskInput(task, index) {
+    if (task.type === 'choice') {
+      return '<div class="choice-list">' + (task.optionen || []).map(function(option) {
+        return '' +
+          '<label class="choice-item">' +
+          '<input type="radio" name="testChoiceTask' + index + '" value="' + escapeAttribute(option) + '"' + (APP_STATE.test.submitted ? ' disabled' : '') + '>' +
+          '<span>' + escapeHtml(option) + '</span>' +
+          '</label>';
+      }).join('') + '</div>';
+    }
+
+    if (task.type === 'order') {
+      const options = Array.isArray(task.optionen) ? task.optionen : [];
+      return '' +
+        '<div class="order-bank">' + options.map(function(option) {
+          return '<button type="button" class="order-chip" ' + (APP_STATE.test.submitted ? 'disabled ' : '') + 'onclick="fillTestDropSlot(' + index + ', \'' + escapeJs(option) + '\')">' + escapeHtml(option) + '</button>';
+        }).join('') + '</div>' +
+        '<div class="order-slots" id="testOrderSlots' + index + '">' + (task.loesung || []).map(function(_, slotIndex) {
+          return '<button type="button" class="drop-slot" data-test-task-index="' + index + '" data-slot-index="' + slotIndex + '" ' + (APP_STATE.test.submitted ? 'disabled ' : '') + 'onclick="clearTestDropSlot(' + index + ', ' + slotIndex + ')">Platz ' + (slotIndex + 1) + '</button>';
+        }).join('') + '</div>';
+    }
+
+    return '<input class="task-input" id="testTaskInput' + index + '" type="text" placeholder="Deine Antwort"' + (APP_STATE.test.submitted ? ' disabled' : '') + '>';
+  }
+
+  function fillTestDropSlot(taskIndex, value) {
+    if (APP_STATE.test.submitted) {
+      return;
+    }
+    const slots = Array.from(document.querySelectorAll('#testOrderSlots' + taskIndex + ' .drop-slot'));
+    const nextEmpty = slots.find(function(slot) {
+      return !slot.dataset.value;
+    });
+    if (!nextEmpty) {
+      return;
+    }
+    nextEmpty.dataset.value = value;
+    nextEmpty.textContent = value;
+    nextEmpty.classList.add('filled');
+  }
+
+  function clearTestDropSlot(taskIndex, slotIndex) {
+    if (APP_STATE.test.submitted) {
+      return;
+    }
+    const slot = document.querySelector('.drop-slot[data-test-task-index="' + taskIndex + '"][data-slot-index="' + slotIndex + '"]');
+    if (!slot) {
+      return;
+    }
+    slot.dataset.value = '';
+    slot.textContent = 'Platz ' + (slotIndex + 1);
+    slot.classList.remove('filled');
+  }
+
+  function getTestAnswer(index) {
+    const task = APP_STATE.testTasks[index];
+    if (!task) {
+      return '';
+    }
+
+    if (task.type === 'choice') {
+      const checked = document.querySelector('input[name="testChoiceTask' + index + '"]:checked');
+      return checked ? checked.value : '';
+    }
+
+    if (task.type === 'order') {
+      const values = Array.from(document.querySelectorAll('#testOrderSlots' + index + ' .drop-slot')).map(function(slot) {
+        return slot.dataset.value || '';
+      });
+      return JSON.stringify(values);
+    }
+
+    const input = document.getElementById('testTaskInput' + index);
+    return input ? input.value : '';
+  }
+
+  function submitTest() {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+    if (!APP_STATE.testTasks.length || APP_STATE.test.submitted) {
+      return;
+    }
+
+    const answers = APP_STATE.testTasks.map(function(_, index) {
+      return getTestAnswer(index);
+    });
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        APP_STATE.test.submitted = true;
+        APP_STATE.test.result = result;
+        renderTest();
+      })
+      .withFailureHandler(function(error) {
+        if (error && /anmeldung|erneut anmelden|abgelaufen/i.test(error.message || '')) {
+          handleAuthFailure(error, 'Die Anmeldung ist abgelaufen.');
+          return;
+        }
+        document.getElementById('testPanel').insertAdjacentHTML(
+          'afterbegin',
+          '<div class="empty-state">Der Test konnte nicht ausgewertet werden. ' + escapeHtml(error && error.message ? error.message : 'Bitte versuche es erneut.') + '</div>'
+        );
+      })
+      .evaluateTest(APP_STATE.auth.token, APP_STATE.subject, APP_STATE.topic, APP_STATE.subtopic || '', APP_STATE.testTasks, answers);
+  }
+
+  function handleTaskInputKeydown(index, event) {
+    if (!APP_STATE.settings.enterChecksTask) {
+      return;
+    }
+
+    if (event.key !== 'Enter' || event.isComposing) {
+      return;
+    }
+
+    if (event.shiftKey) {
+      return;
+    }
+
+    event.preventDefault();
+    checkTask(index);
+  }
+
+  function renderSettings() {
+    const taskCountRoot = document.getElementById('taskCountSettings');
+    const themeModeRoot = document.getElementById('themeModeSettings');
+    const teacherModeButton = document.getElementById('teacherModeButton');
+    const teacherModeStatus = document.getElementById('teacherModeStatus');
+    const themeModes = [
+      { value: 'system', label: 'System' },
+      { value: 'light', label: 'Hell' },
+      { value: 'dark', label: 'Dunkel' }
+    ];
+
+    taskCountRoot.innerHTML =
+      '<div class="task-count-header">' +
+        '<strong id="taskCountValue">' + APP_STATE.settings.taskCount + '</strong>' +
+        '<span>Aufgaben pro Runde</span>' +
+      '</div>' +
+      '<input type="range" min="1" max="20" step="1" value="' + APP_STATE.settings.taskCount + '" class="task-count-slider" id="taskCountSlider" oninput="updateTaskCountSetting(this.value, true)" onchange="updateTaskCountSetting(this.value)">' +
+      '<div class="task-count-scale"><span>1</span><span>10</span><span>20</span></div>';
+
+    themeModeRoot.innerHTML = themeModes.map(function(mode) {
+      const active = APP_STATE.settings.themeMode === mode.value ? ' active' : '';
+      return '<button type="button" class="settings-choice' + active + '" onclick="updateThemeModeSetting(\'' + mode.value + '\')">' + mode.label + '</button>';
+    }).join('');
+
+    document.getElementById('settingEnterChecksTask').checked = !!APP_STATE.settings.enterChecksTask;
+    document.getElementById('settingEnterSendsChat').checked = !!APP_STATE.settings.enterSendsChat;
+
+    if (!APP_STATE.auth.user) {
+      teacherModeButton.disabled = true;
+      teacherModeStatus.textContent = 'Bitte melde dich zuerst an.';
+      teacherModeStatus.className = 'teacher-status';
+      return;
+    }
+
+    teacherModeButton.disabled = APP_STATE.auth.user.role === 'teacher';
+    teacherModeStatus.textContent = APP_STATE.auth.user.role === 'teacher'
+      ? 'Lehrermodus aktiv. Der Bereich „Klassen“ ist freigeschaltet.'
+      : 'Du kannst dieses Konto jetzt als Lehrerkonto freischalten.';
+    teacherModeStatus.className = 'teacher-status' + (APP_STATE.auth.user.role === 'teacher' ? ' success' : '');
+  }
+
+  function updateTaskCountSetting(count, skipRerender) {
+    APP_STATE.settings.taskCount = Math.min(Math.max(parseInt(count, 10) || 5, 1), 20);
+    persistSettings();
+    updateLabels();
+    const valueNode = document.getElementById('taskCountValue');
+    const sliderNode = document.getElementById('taskCountSlider');
+    if (valueNode) {
+      valueNode.textContent = APP_STATE.settings.taskCount;
+    }
+    if (sliderNode) {
+      sliderNode.value = String(APP_STATE.settings.taskCount);
+    }
+    if (!skipRerender) {
+      renderSettings();
+    }
+  }
+
+  function updateBooleanSetting(key, value) {
+    APP_STATE.settings[key] = !!value;
+    persistSettings();
+  }
+
+  function updateThemeModeSetting(mode) {
+    APP_STATE.settings.themeMode = mode;
+    persistSettings();
+    applyTheme();
+    renderSettings();
+  }
+
+  function resetSettings() {
+    APP_STATE.settings = {
+      taskCount: 5,
+      enterChecksTask: true,
+      enterSendsChat: true,
+      themeMode: 'system'
+    };
+    persistSettings();
+    applyTheme();
+    renderSettings();
+  }
+
+  function persistSettings() {
+    try {
+      localStorage.setItem('lernova-settings', JSON.stringify(APP_STATE.settings));
+    } catch (error) {
+      // Ignore storage errors.
+    }
+  }
+
+  function hydrateSettings() {
+    try {
+      const raw = localStorage.getItem('lernova-settings');
+      if (!raw) {
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') {
+        return;
+      }
+      APP_STATE.settings.taskCount = Math.min(Math.max(parseInt(parsed.taskCount, 10) || 5, 1), 20);
+      APP_STATE.settings.enterChecksTask = parsed.enterChecksTask !== false;
+      APP_STATE.settings.enterSendsChat = parsed.enterSendsChat !== false;
+      APP_STATE.settings.themeMode = ['system', 'light', 'dark'].indexOf(parsed.themeMode) !== -1 ? parsed.themeMode : 'system';
+    } catch (error) {
+      // Ignore malformed stored settings.
+    }
+  }
+
+  function persistAuthToken() {
+    try {
+      if (APP_STATE.auth.token) {
+        localStorage.setItem('lernova-auth-token', APP_STATE.auth.token);
+      } else {
+        localStorage.removeItem('lernova-auth-token');
+      }
+    } catch (error) {
+      // Ignore storage errors.
+    }
+  }
+
+  function hydrateAuthToken() {
+    try {
+      APP_STATE.auth.token = localStorage.getItem('lernova-auth-token') || '';
+    } catch (error) {
+      APP_STATE.auth.token = '';
+    }
+  }
+
+  function ensureAuthenticated(message) {
+    if (APP_STATE.auth.user) {
+      return true;
+    }
+
+    syncAuthUi();
+    showAuthStatus(message || 'Bitte melde dich zuerst an.', 'error');
+    return false;
+  }
+
+  function ensureTeacher(message) {
+    if (!ensureAuthenticated(message)) {
+      return false;
+    }
+    if (APP_STATE.auth.user && APP_STATE.auth.user.role === 'teacher') {
+      return true;
+    }
+    showTeacherStatus(message || 'Aktiviere zuerst den Lehrermodus in den Einstellungen.', 'error');
+    return false;
+  }
+
+  function showAuthStatus(message, type) {
+    const status = document.getElementById('authStatus');
+    status.textContent = message;
+    status.className = 'auth-status' + (type ? ' ' + type : '');
+  }
+
+  function showTeacherStatus(message, type) {
+    const status = document.getElementById('teacherStatus');
+    const modeStatus = document.getElementById('teacherModeStatus');
+    status.textContent = message;
+    status.className = 'teacher-status' + (type ? ' ' + type : '');
+    modeStatus.textContent = message;
+    modeStatus.className = 'teacher-status' + (type ? ' ' + type : '');
+  }
+
+  function setAuthPending(isPending) {
+    document.getElementById('accountLoginButton').disabled = isPending;
+    document.getElementById('accountCreateButton').disabled = isPending;
+    document.getElementById('loginHandleInput').disabled = isPending;
+    document.getElementById('loginPasswordInput').disabled = isPending;
+    document.getElementById('createNameInput').disabled = isPending;
+    document.getElementById('createPasswordInput').disabled = isPending;
+  }
+
+  function syncAuthUi() {
+    const isAuthenticated = !!APP_STATE.auth.user;
+    document.getElementById('authOverlay').classList.toggle('hidden', isAuthenticated);
+    document.getElementById('appShell').classList.toggle('hidden', !isAuthenticated);
+
+    const sessionBadge = document.getElementById('sessionBadge');
+    const logoutButton = document.getElementById('logoutButton');
+    const classesTrigger = document.getElementById('classesTrigger');
+    const profileTrigger = document.getElementById('profileTrigger');
+    const teacherModeButton = document.getElementById('teacherModeButton');
+
+    if (isAuthenticated) {
+      const methodLabel = 'Konto';
+      sessionBadge.textContent = methodLabel + ': ' + (APP_STATE.auth.user.loginLabel || APP_STATE.auth.user.displayName);
+      sessionBadge.classList.remove('hidden');
+      logoutButton.classList.remove('hidden');
+      profileTrigger.classList.remove('hidden');
+      classesTrigger.classList.toggle('hidden', APP_STATE.auth.user.role !== 'teacher');
+      teacherModeButton.disabled = APP_STATE.auth.user.role === 'teacher';
+      document.getElementById('loginHandleInput').value = '';
+      document.getElementById('loginPasswordInput').value = '';
+      document.getElementById('createNameInput').value = '';
+      document.getElementById('createPasswordInput').value = '';
+      document.getElementById('createSuffixInput').value = '#0001';
+      showAuthStatus('Angemeldet als ' + APP_STATE.auth.user.displayName + '.', 'success');
+      if (APP_STATE.auth.user.role === 'teacher') {
+        showTeacherStatus('Lehrermodus aktiv. Du kannst jetzt Klassen anlegen und Lernaktivitäten einsehen.', 'success');
+      } else {
+        showTeacherStatus('Du kannst dein Konto in den Einstellungen als Lehrerkonto freischalten.', '');
+      }
+    } else {
+      setAuthPending(false);
+      sessionBadge.textContent = '';
+      sessionBadge.classList.add('hidden');
+      logoutButton.classList.add('hidden');
+      profileTrigger.classList.add('hidden');
+      classesTrigger.classList.add('hidden');
+      teacherModeButton.disabled = false;
+      closeHelpChat();
+      closeSettings();
+      showAuthStatus('Bitte melde dich an, bevor du Aufgaben, Tipps oder den Hilfe-Chat nutzt.', '');
+      showTeacherStatus('Aktuell ist kein Lehrermodus aktiv.', '');
+      setActiveView('homeView');
+    }
+
+    updateLabels();
+  }
+
+  function applyAuthenticatedSession(token, session) {
+    APP_STATE.auth.token = token;
+    APP_STATE.auth.user = session || null;
+    APP_STATE.progress.profile = session && session.profile ? session.profile : null;
+    APP_STATE.auth.ready = true;
+    persistAuthToken();
+    syncAuthUi();
+    if (APP_STATE.auth.user && APP_STATE.auth.user.role === 'teacher') {
+      loadTeacherDashboard();
+    }
+  }
+
+  function clearAuthState() {
+    APP_STATE.auth.token = '';
+    APP_STATE.auth.user = null;
+    APP_STATE.progress.profile = null;
+    APP_STATE.auth.ready = true;
+    APP_STATE.teacher.classes = [];
+    APP_STATE.teacher.activities = [];
+    APP_STATE.teacher.loading = false;
+    APP_STATE.teacher.selectedClassId = '';
+    APP_STATE.teacher.selectedStudentKey = '';
+    persistAuthToken();
+    syncAuthUi();
+  }
+
+  function handleAuthFailure(error, fallbackMessage) {
+    const message = error && error.message ? error.message : fallbackMessage;
+    clearAuthState();
+    showAuthStatus(message || 'Die Anmeldung ist fehlgeschlagen.', 'error');
+  }
+
+  function restoreAuthSession() {
+    hydrateAuthToken();
+    if (!APP_STATE.auth.token) {
+      APP_STATE.auth.ready = true;
+      syncAuthUi();
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        if (response && response.authenticated && response.session) {
+          applyAuthenticatedSession(APP_STATE.auth.token, response.session);
+          return;
+        }
+        clearAuthState();
+      })
+      .withFailureHandler(function(error) {
+        handleAuthFailure(error, 'Die gespeicherte Anmeldung konnte nicht wiederhergestellt werden.');
+      })
+      .getAuthStatus(APP_STATE.auth.token);
+  }
+
+  function updateAccountPreview() {
+    const name = document.getElementById('createNameInput').value.trim();
+    if (!name) {
+      document.getElementById('createSuffixInput').value = '#0001';
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        document.getElementById('createSuffixInput').value = response && response.suffix ? response.suffix : '#0001';
+      })
+      .withFailureHandler(function() {
+        document.getElementById('createSuffixInput').value = '#0001';
+      })
+      .getAccountSuffixPreview(name);
+  }
+
+  function submitAccountLogin() {
+    const handle = document.getElementById('loginHandleInput').value.trim();
+    const password = document.getElementById('loginPasswordInput').value;
+
+    if (!handle) {
+      showAuthStatus('Bitte gib deinen Namen mit #0001 ein.', 'error');
+      return;
+    }
+    if (!password) {
+      showAuthStatus('Bitte gib dein Passwort ein.', 'error');
+      return;
+    }
+
+    setAuthPending(true);
+    showAuthStatus('Account wird angemeldet ...', '');
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        setAuthPending(false);
+        applyAuthenticatedSession(response.token, response.session);
+        showAuthStatus('Anmeldung erfolgreich.', 'success');
+      })
+      .withFailureHandler(function(error) {
+        setAuthPending(false);
+        showAuthStatus(error && error.message ? error.message : 'Die Anmeldung ist fehlgeschlagen.', 'error');
+      })
+      .loginWithLocalAccount(handle, password);
+  }
+
+  function submitAccountCreate() {
+    const name = document.getElementById('createNameInput').value.trim();
+    const password = document.getElementById('createPasswordInput').value;
+
+    if (!name) {
+      showAuthStatus('Bitte gib zuerst deinen Namen ein.', 'error');
+      return;
+    }
+    if (!password) {
+      showAuthStatus('Bitte gib ein Passwort ein.', 'error');
+      return;
+    }
+
+    setAuthPending(true);
+    showAuthStatus('Account wird erstellt ...', '');
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        setAuthPending(false);
+        applyAuthenticatedSession(response.token, response.session);
+        showAuthStatus('Account erstellt und angemeldet.', 'success');
+      })
+      .withFailureHandler(function(error) {
+        setAuthPending(false);
+        showAuthStatus(error && error.message ? error.message : 'Der Account konnte nicht erstellt werden.', 'error');
+      })
+      .createLocalAccount(name, password);
+  }
+
+  function handleAccountAuthKeydown(event, mode) {
+    if (event.key !== 'Enter') {
+      return;
+    }
+
+    event.preventDefault();
+    if (mode === 'create') {
+      submitAccountCreate();
+      return;
+    }
+    submitAccountLogin();
+  }
+
+  function logoutUser() {
+    const token = APP_STATE.auth.token;
+    clearAuthState();
+
+    if (!token) {
+      return;
+    }
+
+    google.script.run
+      .withFailureHandler(function() {
+        showAuthStatus('Die lokale Anmeldung wurde beendet, aber das Server-Logout konnte nicht bestätigt werden.', 'error');
+      })
+      .logout(token);
+  }
+
+  function enableTeacherMode() {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+    if (APP_STATE.auth.user.role === 'teacher') {
+      showTeacherStatus('Der Lehrermodus ist bereits aktiv.', 'success');
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        APP_STATE.auth.user = response;
+        APP_STATE.progress.profile = response && response.profile ? response.profile : APP_STATE.progress.profile;
+        syncAuthUi();
+        showTeacherStatus('Lehrermodus aktiviert. Der Bereich „Klassen“ ist jetzt freigeschaltet.', 'success');
+      })
+      .withFailureHandler(function(error) {
+        showTeacherStatus(error && error.message ? error.message : 'Der Lehrermodus konnte nicht aktiviert werden.', 'error');
+      })
+      .activateTeacherMode(APP_STATE.auth.token);
+  }
+
+  function loadTeacherDashboard() {
+    if (!ensureTeacher()) {
+      return;
+    }
+
+    APP_STATE.teacher.loading = true;
+    renderTeacherDashboard();
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        APP_STATE.teacher.loading = false;
+        APP_STATE.teacher.classes = response && Array.isArray(response.classes) ? response.classes : [];
+        APP_STATE.teacher.activities = response && Array.isArray(response.activities) ? response.activities : [];
+        syncTeacherSelectionState();
+        renderTeacherDashboard();
+      })
+      .withFailureHandler(function(error) {
+        APP_STATE.teacher.loading = false;
+        showTeacherStatus(error && error.message ? error.message : 'Der Lehrerbereich konnte nicht geladen werden.', 'error');
+        renderTeacherDashboard();
+      })
+      .getTeacherDashboard(APP_STATE.auth.token);
+  }
+
+  function renderTeacherDashboard() {
+    const classesPanel = document.getElementById('teacherClassesPanel');
+    const studentsPanel = document.getElementById('teacherStudentsPanel');
+    const activityPanel = document.getElementById('teacherActivityPanel');
+    const studentsMeta = document.getElementById('teacherStudentsMeta');
+    const activityHeadline = document.getElementById('teacherActivityHeadline');
+    const activityMeta = document.getElementById('teacherActivityMeta');
+
+    if (!APP_STATE.auth.user || APP_STATE.auth.user.role !== 'teacher') {
+      classesPanel.innerHTML = '<div class="empty-state">Der Bereich „Klassen“ steht erst nach Aktivierung des Lehrermodus zur Verfügung.</div>';
+      studentsPanel.innerHTML = '<div class="empty-state">Noch keine Schülerdaten verfügbar.</div>';
+      activityPanel.innerHTML = '<div class="empty-state">Noch keine Lehrerdaten verfügbar.</div>';
+      return;
+    }
+
+    if (APP_STATE.teacher.loading) {
+      classesPanel.innerHTML = '<div class="loading-state">Klassen werden geladen ...</div>';
+      studentsPanel.innerHTML = '<div class="loading-state">Schüler werden geladen ...</div>';
+      activityPanel.innerHTML = '<div class="loading-state">Aktivitäten werden geladen ...</div>';
+      return;
+    }
+
+    syncTeacherSelectionState();
+
+    if (!APP_STATE.teacher.classes.length) {
+      classesPanel.innerHTML = '<div class="empty-state">Noch keine Klassen angelegt. Erstelle oben deine erste Klasse.</div>';
+      studentsPanel.innerHTML = '<div class="empty-state">Lege zuerst eine Klasse an, damit hier deine Schülerliste erscheint.</div>';
+      activityPanel.innerHTML = '<div class="empty-state">Sobald Schüler einer Klasse beitreten, siehst du hier ihre Aktivitäten.</div>';
+      studentsMeta.textContent = 'Wähle zuerst eine Klasse aus.';
+      activityHeadline.textContent = 'Schüleraktivitäten';
+      activityMeta.textContent = 'Klicke auf einen Schüler, um die letzten Aktivitäten zu sehen.';
+    } else {
+      classesPanel.innerHTML = '<div class="teacher-list">' + APP_STATE.teacher.classes.map(function(item) {
+        const subtitle = [
+          item.classLevel,
+          String(item.studentCount || 0) + ' Schüler',
+          item.lastActivityAt ? 'letzte Aktivität ' + formatTimestamp(item.lastActivityAt) : ''
+        ].filter(Boolean).join(' · ');
+        const activeClass = APP_STATE.teacher.selectedClassId === item.classId ? ' active' : '';
+        return '' +
+          '<article class="teacher-class-item teacher-select-card' + activeClass + '" onclick="selectTeacherClass(\'' + escapeJs(item.classId) + '\')">' +
+          '<strong>' + escapeHtml(item.className) + '</strong>' +
+          '<div class="teacher-class-meta">' + escapeHtml(subtitle || 'Klasse ohne Zusatzangabe') + '</div>' +
+          '<div class="teacher-class-actions">' +
+          '<span class="teacher-code-pill">' + escapeHtml(item.classCode) + '</span>' +
+          '<button type="button" class="ghost-button" onclick="handleTeacherClassCodeRegenerate(event, \'' + escapeJs(item.classId) + '\')">Neuen Code erzeugen</button>' +
+          '</div>' +
+          '</article>';
+      }).join('') + '</div>';
+    }
+
+    const selectedClass = getSelectedTeacherClass_();
+    if (!selectedClass) {
+      studentsPanel.innerHTML = '<div class="empty-state">Wähle eine Klasse aus, um die Schülerliste zu öffnen.</div>';
+      activityPanel.innerHTML = '<div class="empty-state">Wähle erst eine Klasse und dann einen Schüler aus.</div>';
+      studentsMeta.textContent = 'Wähle zuerst eine Klasse aus.';
+      activityHeadline.textContent = 'Schüleraktivitäten';
+      activityMeta.textContent = 'Klicke auf einen Schüler, um die letzten Aktivitäten zu sehen.';
+      return;
+    }
+
+    studentsMeta.textContent = selectedClass.className + (selectedClass.classLevel ? ' · ' + selectedClass.classLevel : '') + ' · ' + String((selectedClass.students || []).length) + ' Schüler';
+
+    if (!selectedClass.students || !selectedClass.students.length) {
+      studentsPanel.innerHTML = '<div class="empty-state">In dieser Klasse sind noch keine Schüler verknüpft.</div>';
+      activityPanel.innerHTML = '<div class="empty-state">Sobald Schüler beitreten und arbeiten, erscheinen hier ihre Aktivitäten.</div>';
+      activityHeadline.textContent = 'Schüleraktivitäten';
+      activityMeta.textContent = 'Noch kein Schüler ausgewählt.';
+      return;
+    }
+
+    studentsPanel.innerHTML = '<div class="teacher-list">' + selectedClass.students.map(function(student) {
+      const activeStudent = APP_STATE.teacher.selectedStudentKey === student.selectionKey ? ' active' : '';
+      const studentMeta = [
+        student.activityCount ? String(student.activityCount) + ' Einträge' : 'Noch keine Einträge',
+        student.lastActivityAt ? 'zuletzt ' + formatTimestamp(student.lastActivityAt) : '',
+        student.lastActionType ? formatActionType(student.lastActionType) : ''
+      ].filter(Boolean).join(' · ');
+
+      return '' +
+        '<article class="teacher-class-item teacher-select-card' + activeStudent + '" onclick="selectTeacherStudent(\'' + escapeJs(selectedClass.classId) + '\', \'' + escapeJs(student.selectionKey) + '\')">' +
+        '<strong>' + escapeHtml(student.studentName || 'Unbekannt') + '</strong>' +
+        '<div class="teacher-class-meta">' + escapeHtml(studentMeta) + '</div>' +
+        '</article>';
+    }).join('') + '</div>';
+
+    const selectedStudent = getSelectedTeacherStudent_(selectedClass);
+    if (!selectedStudent) {
+      activityPanel.innerHTML = '<div class="empty-state">Wähle einen Schüler aus der Liste, um seine Aktivitäten zu prüfen.</div>';
+      activityHeadline.textContent = 'Schüleraktivitäten';
+      activityMeta.textContent = 'Klasse: ' + selectedClass.className;
+      return;
+    }
+
+    const filteredActivities = APP_STATE.teacher.activities.filter(function(item) {
+      return item.classId === selectedClass.classId && item.selectionKey === selectedStudent.selectionKey;
+    });
+
+    activityHeadline.textContent = selectedStudent.studentName || 'Schüleraktivitäten';
+    activityMeta.textContent = selectedClass.className + ' · ' + (filteredActivities.length ? String(filteredActivities.length) + ' letzte Einträge' : 'Noch keine protokollierten Einträge');
+
+    if (!filteredActivities.length) {
+      activityPanel.innerHTML = '<div class="empty-state">Für diesen Schüler wurden noch keine Aktivitäten protokolliert.</div>';
+      return;
+    }
+
+    activityPanel.innerHTML = '<div class="activity-list">' + filteredActivities.map(function(item) {
+      const meta = [
+        item.subject || '',
+        item.topic || '',
+        item.subtopic || '',
+        formatTimestamp(item.timestamp)
+      ].filter(Boolean).join(' · ');
+
+      return '' +
+        '<article class="activity-item">' +
+        '<strong>' + escapeHtml(formatActionType(item.actionType)) + '</strong>' +
+        '<div class="activity-meta">' + escapeHtml(meta || 'Allgemeine Aktivität') + '</div>' +
+        '<div class="activity-meta">' + escapeHtml((item.detail || '') + (item.status ? ' (' + item.status + ')' : '')) + '</div>' +
+        '</article>';
+    }).join('') + '</div>';
+  }
+
+  function syncTeacherSelectionState() {
+    const classes = Array.isArray(APP_STATE.teacher.classes) ? APP_STATE.teacher.classes : [];
+    const selectedClass = classes.find(function(item) {
+      return item.classId === APP_STATE.teacher.selectedClassId;
+    }) || classes[0] || null;
+
+    APP_STATE.teacher.selectedClassId = selectedClass ? selectedClass.classId : '';
+
+    if (!selectedClass || !Array.isArray(selectedClass.students) || !selectedClass.students.length) {
+      APP_STATE.teacher.selectedStudentKey = '';
+      return;
+    }
+
+    const selectedStudent = selectedClass.students.find(function(item) {
+      return item.selectionKey === APP_STATE.teacher.selectedStudentKey;
+    }) || selectedClass.students[0];
+
+    APP_STATE.teacher.selectedStudentKey = selectedStudent ? selectedStudent.selectionKey : '';
+  }
+
+  function getSelectedTeacherClass_() {
+    return (APP_STATE.teacher.classes || []).find(function(item) {
+      return item.classId === APP_STATE.teacher.selectedClassId;
+    }) || null;
+  }
+
+  function getSelectedTeacherStudent_(selectedClass) {
+    const safeClass = selectedClass || getSelectedTeacherClass_();
+    if (!safeClass || !Array.isArray(safeClass.students)) {
+      return null;
+    }
+
+    return safeClass.students.find(function(item) {
+      return item.selectionKey === APP_STATE.teacher.selectedStudentKey;
+    }) || null;
+  }
+
+  function selectTeacherClass(classId) {
+    APP_STATE.teacher.selectedClassId = String(classId || '');
+    APP_STATE.teacher.selectedStudentKey = '';
+    syncTeacherSelectionState();
+    renderTeacherDashboard();
+  }
+
+  function selectTeacherStudent(classId, selectionKey) {
+    APP_STATE.teacher.selectedClassId = String(classId || '');
+    APP_STATE.teacher.selectedStudentKey = String(selectionKey || '');
+    syncTeacherSelectionState();
+    renderTeacherDashboard();
+  }
+
+  function handleTeacherClassCodeRegenerate(event, classId) {
+    if (event && typeof event.stopPropagation === 'function') {
+      event.stopPropagation();
+    }
+    regenerateClassCode(classId);
+  }
+
+  function createTeacherClassroom() {
+    if (!ensureTeacher()) {
+      return;
+    }
+
+    const className = document.getElementById('teacherClassNameInput').value.trim();
+    const classLevel = document.getElementById('teacherClassLevelInput').value.trim();
+    if (!className) {
+      showTeacherStatus('Bitte gib zuerst einen Klassennamen ein.', 'error');
+      return;
+    }
+
+    document.getElementById('createClassButton').disabled = true;
+    showTeacherStatus('Klasse wird erstellt ...', '');
+
+    google.script.run
+      .withSuccessHandler(function() {
+        document.getElementById('createClassButton').disabled = false;
+        document.getElementById('teacherClassNameInput').value = '';
+        document.getElementById('teacherClassLevelInput').value = '';
+        showTeacherStatus('Klasse erstellt. Der neue Code ist jetzt im Bereich „Deine Klassen“ sichtbar.', 'success');
+        loadTeacherDashboard();
+      })
+      .withFailureHandler(function(error) {
+        document.getElementById('createClassButton').disabled = false;
+        showTeacherStatus(error && error.message ? error.message : 'Die Klasse konnte nicht erstellt werden.', 'error');
+      })
+      .createTeacherClassroom(APP_STATE.auth.token, {
+        className: className,
+        classLevel: classLevel
+      });
+  }
+
+  function regenerateClassCode(classId) {
+    if (!ensureTeacher()) {
+      return;
+    }
+
+    showTeacherStatus('Klassen-Code wird erneuert ...', '');
+
+    google.script.run
+      .withSuccessHandler(function() {
+        showTeacherStatus('Der Klassen-Code wurde erneuert.', 'success');
+        loadTeacherDashboard();
+      })
+      .withFailureHandler(function(error) {
+        showTeacherStatus(error && error.message ? error.message : 'Der Klassen-Code konnte nicht erneuert werden.', 'error');
+      })
+      .regenerateTeacherClassCode(APP_STATE.auth.token, classId);
+  }
+
+  function handleProfileClassKeydown(event) {
+    if (event.key !== 'Enter') {
+      return;
+    }
+    event.preventDefault();
+    joinClassroomFromProfile();
+  }
+
+  function joinClassroomFromProfile() {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+
+    const input = document.getElementById('profileClassCodeInput');
+    const button = document.getElementById('joinProfileClassButton');
+    const classCode = input.value.trim();
+    if (!classCode) {
+      const status = document.getElementById('profileClassStatus');
+      status.textContent = 'Bitte gib zuerst einen Klassen-Code ein.';
+      status.className = 'teacher-status error';
+      return;
+    }
+
+    button.disabled = true;
+    const status = document.getElementById('profileClassStatus');
+    status.textContent = 'Klasse wird verknüpft ...';
+    status.className = 'teacher-status';
+
+    google.script.run
+      .withSuccessHandler(function(session) {
+        button.disabled = false;
+        input.value = '';
+        APP_STATE.auth.user = session;
+        APP_STATE.progress.profile = session && session.profile ? session.profile : APP_STATE.progress.profile;
+        syncAuthUi();
+        renderProfileView();
+        status.textContent = 'Klasse erfolgreich beigetreten.';
+        status.className = 'teacher-status success';
+      })
+      .withFailureHandler(function(error) {
+        button.disabled = false;
+        status.textContent = error && error.message ? error.message : 'Der Klassenbeitritt ist fehlgeschlagen.';
+        status.className = 'teacher-status error';
+      })
+      .joinStudentClassroom(APP_STATE.auth.token, classCode);
+  }
+
+  function switchClassroomFromProfile(classId) {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+
+    const status = document.getElementById('profileClassStatus');
+    status.textContent = 'Aktive Klasse wird gewechselt ...';
+    status.className = 'teacher-status';
+
+    google.script.run
+      .withSuccessHandler(function(session) {
+        APP_STATE.auth.user = session;
+        APP_STATE.progress.profile = session && session.profile ? session.profile : APP_STATE.progress.profile;
+        syncAuthUi();
+        renderProfileView();
+      })
+      .withFailureHandler(function(error) {
+        status.textContent = error && error.message ? error.message : 'Die Klasse konnte nicht gewechselt werden.';
+        status.className = 'teacher-status error';
+      })
+      .switchStudentClassroom(APP_STATE.auth.token, classId);
+  }
+
+  function formatTimestamp(timestamp) {
+    if (!timestamp) {
+      return '';
+    }
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      return String(timestamp);
+    }
+    return date.toLocaleString('de-DE');
+  }
+
+  function formatActionType(actionType) {
+    if (actionType === 'load_tasks') {
+      return 'Aufgaben geladen';
+    }
+    if (actionType === 'start_test') {
+      return 'Test gestartet';
+    }
+    if (actionType === 'finish_test') {
+      return 'Test beendet';
+    }
+    if (actionType === 'check_answer') {
+      return 'Antwort geprüft';
+    }
+    if (actionType === 'help_chat') {
+      return 'Hilfe-Chat genutzt';
+    }
+    return 'Aktivität';
+  }
+
+  function getResolvedThemeMode() {
+    if (APP_STATE.settings.themeMode === 'light' || APP_STATE.settings.themeMode === 'dark') {
+      return APP_STATE.settings.themeMode;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  }
+
+  function applyTheme() {
+    document.body.setAttribute('data-theme', getResolvedThemeMode());
+  }
+
+  function fillDropSlot(taskIndex, value) {
+    const slots = Array.from(document.querySelectorAll('#orderSlots' + taskIndex + ' .drop-slot'));
+    const nextEmpty = slots.find(function(slot) {
+      return !slot.dataset.value;
+    });
+    if (!nextEmpty) {
+      return;
+    }
+    nextEmpty.dataset.value = value;
+    nextEmpty.textContent = value;
+    nextEmpty.classList.add('filled');
+  }
+
+  function clearDropSlot(taskIndex, slotIndex) {
+    const slot = document.querySelector('.drop-slot[data-task-index="' + taskIndex + '"][data-slot-index="' + slotIndex + '"]');
+    if (!slot) {
+      return;
+    }
+    slot.dataset.value = '';
+    slot.textContent = 'Platz ' + (slotIndex + 1);
+    slot.classList.remove('filled');
+  }
+
+  function getTaskAnswer(index) {
+    const task = APP_STATE.tasks[index];
+    if (!task) {
+      return '';
+    }
+
+    if (task.type === 'choice') {
+      const checked = document.querySelector('input[name="choiceTask' + index + '"]:checked');
+      return checked ? checked.value : '';
+    }
+
+    if (task.type === 'order') {
+      const values = Array.from(document.querySelectorAll('#orderSlots' + index + ' .drop-slot')).map(function(slot) {
+        return slot.dataset.value || '';
+      });
+      return JSON.stringify(values);
+    }
+
+    const input = document.getElementById('taskInput' + index);
+    return input ? input.value : '';
+  }
+
+  function checkTask(index) {
+    if (!ensureAuthenticated()) {
+      return;
+    }
+
+    const task = APP_STATE.tasks[index];
+    if (!task) {
+      return;
+    }
+    const userInput = getTaskAnswer(index);
+    google.script.run
+      .withSuccessHandler(function(response) {
+        const result = document.getElementById('taskResult' + index);
+        const taskCard = document.querySelector('[data-task-index="' + index + '"]');
+        const checkButton = taskCard ? taskCard.querySelector('.primary-button') : null;
+        const normalizedResult = normalizeCheckResult(response && response.result ? response.result : response);
+        APP_STATE.progress.profile = response && response.profile ? response.profile : APP_STATE.progress.profile;
+
+        if (normalizedResult.status === 'correct') {
+          result.textContent = normalizedResult.message;
+          result.className = 'result good';
+          APP_STATE.taskResults[index] = {
+            message: normalizedResult.message,
+            className: 'good',
+            locked: !response || !response.nextTask
+          };
+        } else if (normalizedResult.status === 'review') {
+          result.textContent = normalizedResult.message;
+          result.className = 'result review';
+          APP_STATE.taskResults[index] = { message: normalizedResult.message, className: 'review' };
+        } else {
+          result.textContent = normalizedResult.message;
+          result.className = 'result bad';
+          APP_STATE.taskResults[index] = { message: normalizedResult.message, className: 'bad' };
+        }
+
+        renderPlayerProfile();
+
+        if (checkButton && APP_STATE.taskResults[index] && APP_STATE.taskResults[index].locked) {
+          checkButton.disabled = true;
+        }
+
+        if (response && response.nextTask && normalizedResult.status !== 'review') {
+          APP_STATE.tasks[index] = response.nextTask;
+          setTimeout(function() {
+            APP_STATE.taskResults[index] = {
+              message: normalizedResult.correct ? 'Neue Aufgabe geladen.' : 'Aehnliche Wiederholungsaufgabe geladen.',
+              className: normalizedResult.correct ? 'good' : 'review'
+            };
+            renderTasks();
+          }, 700);
+        }
+      })
+      .withFailureHandler(function(error) {
+        if (error && /anmeldung|erneut anmelden|abgelaufen/i.test(error.message || '')) {
+          handleAuthFailure(error, 'Die Anmeldung ist abgelaufen.');
+          return;
+        }
+        const result = document.getElementById('taskResult' + index);
+        result.textContent = 'Prüfung fehlgeschlagen: ' + (error && error.message ? error.message : 'Unbekannter Fehler');
+        result.className = 'result bad';
+      })
+      .submitTaskAnswer(APP_STATE.auth.token, APP_STATE.subject, APP_STATE.topic, APP_STATE.classLevel, APP_STATE.subtopic || '', task, userInput);
+  }
+
+  function normalizeCheckResult(checkResult) {
+    if (checkResult && typeof checkResult === 'object') {
+      return {
+        status: checkResult.status || (checkResult.correct ? 'correct' : 'incorrect'),
+        message: checkResult.message || (checkResult.correct ? 'Richtig gelöst.' : 'Noch nicht richtig. Schau dir die Aufgabe oder den Tipp noch einmal an.'),
+        correct: !!checkResult.correct
+      };
+    }
+
+    return {
+      status: checkResult ? 'correct' : 'incorrect',
+      message: checkResult ? 'Richtig gelöst.' : 'Noch nicht richtig. Schau dir die Aufgabe oder den Tipp noch einmal an.',
+      correct: !!checkResult
+    };
+  }
+
+  function showSolution(index) {
+    const task = APP_STATE.tasks[index];
+    const result = document.getElementById('taskResult' + index);
+    const taskCard = document.querySelector('[data-task-index="' + index + '"]');
+    const checkButton = taskCard ? taskCard.querySelector('.primary-button') : null;
+    if (!task || !result) {
+      return;
+    }
+
+    APP_STATE.taskResults[index] = {
+      message: 'Lösung wurde angezeigt. Für diese Aufgabe gibt es keine XP mehr.',
+      className: '',
+      solutionRevealed: true
+    };
+
+    if (checkButton) {
+      checkButton.disabled = false;
+    }
+
+    if (APP_STATE.subject === 'deutsch' && APP_STATE.topic === 'schreiben') {
+      result.textContent = 'Musterlösung: individuelle Lösung möglich. Achte auf Aufbau, Verständlichkeit und passende Sprache. Für diese Aufgabe gibt es keine XP mehr.';
+    } else {
+      result.textContent = 'Lösung: ' + (Array.isArray(task.loesung) ? task.loesung.join(' → ') : task.loesung) + ' | Für diese Aufgabe gibt es keine XP mehr.';
+    }
+    result.className = 'result';
+
+    if (ensureAuthenticated() && task.id) {
+      google.script.run
+        .withFailureHandler(function() {
+          // Die UI bleibt trotzdem gesperrt; die serverseitige Markierung wird beim nächsten Versuch erneut gesetzt.
+        })
+        .markTaskSolutionViewed(APP_STATE.auth.token, task.id);
+    }
+  }
+
+  function renderTips() {
+    const panel = document.getElementById('tipsPanel');
+    const subjectConfig = getCurrentSubjectConfig();
+    const topicConfig = getCurrentTopicConfig();
+    const subtopics = getCurrentSubtopics();
+    const subtopicLabel = getSelectedSubtopicLabel();
+    const cards = [];
+
+    cards.push({
+      title: topicConfig ? topicConfig.label : 'Thema',
+      text: topicConfig ? topicConfig.tip : 'Wähle ein Thema aus.'
+    });
+
+    if (subtopics && APP_STATE.subtopic && subtopics[APP_STATE.subtopic]) {
+      cards.push({
+        title: subtopics[APP_STATE.subtopic].label,
+        text: subtopics[APP_STATE.subtopic].tip
+      });
+    }
+
+    cards.push({
+      title: 'Klassenbezug',
+      text: subjectConfig.label + ' für Klasse ' + APP_STATE.classLevel + (subtopicLabel ? ' mit dem Unterthema ' + subtopicLabel + '.' : '.')
+    });
+
+    panel.innerHTML = '<div class="tip-stack">' + cards.map(function(card) {
+      return '' +
+        '<article class="tip-card">' +
+        '<h3>' + escapeHtml(card.title) + '</h3>' +
+        '<p class="tip-text">' + escapeHtml(card.text) + '</p>' +
+        '</article>';
+    }).join('') + '</div>';
+  }
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value);
+  }
+
+  function escapeJs(value) {
+    return String(value || '')
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'");
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    hydrateSettings();
+    applyTheme();
+    syncSelectedTopic();
+    syncSelectedSubtopic();
+    renderDashboard();
+    renderSubjectCards();
+    updateLabels();
+    renderTasks();
+    renderTips();
+    renderProfileView();
+    renderTeacherDashboard();
+    goHome();
+    updateHelpContext();
+    updateAccountPreview();
+    syncAuthUi();
+    restoreAuthSession();
+  });
+
+  if (window.matchMedia) {
+    const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+    const syncSystemTheme = function() {
+      if (APP_STATE.settings.themeMode === 'system') {
+        applyTheme();
+      }
+    };
+
+    if (systemThemeMedia.addEventListener) {
+      systemThemeMedia.addEventListener('change', syncSystemTheme);
+    } else if (systemThemeMedia.addListener) {
+      systemThemeMedia.addListener(syncSystemTheme);
+    }
+  }
+
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('.custom-dropdown') && APP_STATE.openDropdown) {
+      APP_STATE.openDropdown = '';
+      renderDashboard();
+    }
+  });
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape' && APP_STATE.openDropdown) {
+      APP_STATE.openDropdown = '';
+      renderDashboard();
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      closeHelpChat();
+      closeSettings();
+    }
+  });
+</script>
